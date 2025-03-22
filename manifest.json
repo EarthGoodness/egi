@@ -1,12 +1,15 @@
 {
-    "domain": "egi_vrf",
-    "name": "EGI VRF Gateway",
-    "version": "1.0.0",
-    "documentation": "https://github.com/yourusername/ha-egi-vrf",
-    "requirements": ["pymodbus>=3.5.2"],
-    "codeowners": ["@yourusername"],
-    "config_flow": true,
-    "iot_class": "local_polling",
-    "integration_type": "device"
-  }
-  
+  "domain": "egi_vrf",
+  "name": "EGI VRF",
+  "version": "1.0.0",
+  "config_flow": true,
+  "integration_type": "hub",
+  "documentation": "https://www.example.com/egi_vrf",
+  "requirements": [
+    "pymodbus>=3.0,<4.0"
+  ],
+  "codeowners": [
+    "@username"
+  ],
+  "iot_class": "local_polling"
+}
