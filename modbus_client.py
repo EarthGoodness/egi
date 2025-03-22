@@ -156,4 +156,3 @@ class EgiVrfModbusClient:
                     info["special_flags"] = special_byte
                 found[idx] = info
         return found
-}
