@@ -1,76 +1,107 @@
 """Config flow for EGI VRF integration."""
+import logging
 from homeassistant import config_entries
 from homeassistant.core import callback
 import voluptuous as vol
 
-from .const import DOMAIN, CONF_PORT, CONF_BAUDRATE, CONF_PARITY, CONF_STOPBITS, CONF_SLAVE_ID, CONF_POLL_INTERVAL, \
-    DEFAULT_BAUDRATE, DEFAULT_PARITY, DEFAULT_STOPBITS, DEFAULT_SLAVE_ID, DEFAULT_POLL_INTERVAL
+from . import const, modbus_client
+from .options_flow import EgiVrfOptionsFlowHandler  # <-- Added this import
 
-# Mapping of parity display names to single-letter codes
-PARITY_OPTIONS = {"None": "N", "Even": "E", "Odd": "O"}
+_LOGGER = logging.getLogger(__name__)
 
-class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for EGI VRF."""
+class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
+    """Handle a config flow for EGI VRF Modbus integration."""
     VERSION = 1
 
+    def __init__(self):
+        self._connection_type = None
+
     async def async_step_user(self, user_input=None):
-        """Handle the initial step of configuration."""
+        """First step: choose connection type."""
         errors = {}
         if user_input is not None:
-            # Basic validation for required port
-            port = user_input.get(CONF_PORT)
-            if not port:
-                errors["base"] = "port_required"
-            if not errors:
-                # Convert parity to single-letter code
-                parity = user_input.get(CONF_PARITY, DEFAULT_PARITY)
-                if parity in PARITY_OPTIONS:
-                    user_input[CONF_PARITY] = PARITY_OPTIONS[parity]
-                return self.async_create_entry(title=f"EGI VRF ({port})", data=user_input)
-        # Show the form with default values
-        default_port = "/dev/ttyUSB0"
+            self._connection_type = user_input.get("connection_type")
+            if self._connection_type == "serial":
+                return await self.async_step_serial()
+            elif self._connection_type == "tcp":
+                return await self.async_step_tcp()
+            else:
+                errors["base"] = "invalid_connection_type"
         data_schema = vol.Schema({
-            vol.Required(CONF_PORT, default=default_port): str,
-            vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.Coerce(int),
-            vol.Optional(CONF_PARITY, default="Even"): vol.In(list(PARITY_OPTIONS.keys())),
-            vol.Optional(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.In([1, 2]),
-            vol.Optional(CONF_SLAVE_ID, default=DEFAULT_SLAVE_ID): vol.Coerce(int),
-            vol.Optional(CONF_POLL_INTERVAL, default=DEFAULT_POLL_INTERVAL): vol.Coerce(int),
+            vol.Required("connection_type", default="serial"): vol.In(["serial", "tcp"])
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+
+    async def async_step_serial(self, user_input=None):
+        """Handle the serial connection configuration step."""
+        errors = {}
+        if user_input is not None:
+            user_input["connection_type"] = "serial"
+            error = await self._async_test_connection(user_input)
+            if error is None:
+                return self.async_create_entry(title=f"EGI VRF (Serial {user_input.get('port')})", data=user_input)
+            else:
+                errors["base"] = error
+        data_schema = vol.Schema({
+            vol.Required("port", default=const.DEFAULT_PORT): str,
+            vol.Optional("baudrate", default=const.DEFAULT_BAUDRATE): int,
+            vol.Optional("parity", default=const.DEFAULT_PARITY): vol.In(["N", "E", "O"]),
+            vol.Optional("stopbits", default=const.DEFAULT_STOPBITS): vol.All(int, vol.In([1, 2])),
+            vol.Optional("bytesize", default=const.DEFAULT_BYTESIZE): vol.All(int, vol.In([7, 8])),
+            vol.Optional("slave_id", default=const.DEFAULT_SLAVE_ID): vol.All(int, vol.Range(min=1, max=247))
+        })
+        return self.async_show_form(step_id="serial", data_schema=data_schema, errors=errors)
+
+    async def async_step_tcp(self, user_input=None):
+        """Handle the TCP connection configuration step."""
+        errors = {}
+        if user_input is not None:
+            user_input["connection_type"] = "tcp"
+            error = await self._async_test_connection(user_input)
+            if error is None:
+                return self.async_create_entry(title=f"EGI VRF (TCP {user_input.get('host')}:{user_input.get('port')})", data=user_input)
+            else:
+                errors["base"] = error
+        data_schema = vol.Schema({
+            vol.Required("host"): str,
+            vol.Required("port", default=502): int,
+            vol.Optional("slave_id", default=const.DEFAULT_SLAVE_ID): vol.All(int, vol.Range(min=1, max=247))
+        })
+        return self.async_show_form(step_id="tcp", data_schema=data_schema, errors=errors)
+
+    async def _async_test_connection(self, config):
+        """Test the modbus connection with given config. Returns error string or None if success."""
+        def _try_connect():
+            try:
+                if config.get("connection_type") == "serial":
+                    client = modbus_client.EgiModbusClient(
+                        port=config.get("port"),
+                        baudrate=config.get("baudrate", const.DEFAULT_BAUDRATE),
+                        parity=config.get("parity", const.DEFAULT_PARITY),
+                        stopbits=config.get("stopbits", const.DEFAULT_STOPBITS),
+                        bytesize=config.get("bytesize", const.DEFAULT_BYTESIZE),
+                        slave_id=config.get("slave_id", const.DEFAULT_SLAVE_ID)
+                    )
+                else:
+                    client = modbus_client.EgiModbusClient(
+                        host=config.get("host"),
+                        port=config.get("port", 502),
+                        slave_id=config.get("slave_id", const.DEFAULT_SLAVE_ID)
+                    )
+                if not client.connect():
+                    return "cannot_connect"
+                result = client.read_holding_registers(0, 1)
+                client.close()
+                if result is None:
+                    return "no_response"
+            except Exception as e:
+                _LOGGER.error("Connection test failed: %s", e)
+                return "cannot_connect"
+            return None
+        return await self.hass.async_add_executor_job(_try_connect)
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return EgiVrfOptionsFlowHandler(config_entry)
+        return EgiVrfOptionsFlowHandler()
 
-class EgiVrfOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle an options flow for existing EGI VRF config entry."""
-
-    async def async_step_init(self, user_input=None):
-        """Manage the integration options."""
-        if user_input is not None:
-            # Convert parity display name back to single-letter code
-            parity_name = user_input.get(CONF_PARITY)
-            if parity_name in PARITY_OPTIONS:
-                user_input[CONF_PARITY] = PARITY_OPTIONS[parity_name]
-            return self.async_create_entry(title="", data=user_input)
-
-        # Current settings as defaults
-        current = {**self.config_entry.data, **(self.config_entry.options or {})}
-        data_schema = vol.Schema({
-            vol.Optional(CONF_BAUDRATE, default=current.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)): vol.Coerce(int),
-            vol.Optional(CONF_PARITY, default=self._parity_display(current.get(CONF_PARITY, DEFAULT_PARITY))): vol.In(list(PARITY_OPTIONS.keys())),
-            vol.Optional(CONF_STOPBITS, default=current.get(CONF_STOPBITS, DEFAULT_STOPBITS)): vol.In([1, 2]),
-            vol.Optional(CONF_SLAVE_ID, default=current.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)): vol.Coerce(int),
-            vol.Optional(CONF_POLL_INTERVAL, default=current.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)): vol.Coerce(int),
-        })
-
-        return self.async_show_form(step_id="init", data_schema=data_schema)
-
-    def _parity_display(self, parity_char):
-        """Helper to get parity display name from single-letter code."""
-        for name, char in PARITY_OPTIONS.items():
-            if parity_char and parity_char.upper() == char:
-                return name
-        return "None"

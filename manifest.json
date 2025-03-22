@@ -1,15 +1,11 @@
 {
   "domain": "egi_vrf",
-  "name": "EGI VRF",
+  "name": "EGI VRF Modbus RTU",
   "version": "1.0.0",
   "config_flow": true,
-  "integration_type": "hub",
-  "documentation": "https://www.example.com/egi_vrf",
-  "requirements": [
-    "pymodbus>=3.0,<4.0"
-  ],
-  "codeowners": [
-    "@username"
-  ],
-  "iot_class": "local_polling"
+  "documentation": "",
+  "requirements": ["pymodbus>=3.0,<4.0"],
+  "iot_class": "local_polling",
+  "codeowners": [],
+  "integration_type": "device"
 }

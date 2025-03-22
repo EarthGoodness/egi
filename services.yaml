@@ -1,7 +1,8 @@
 scan_idus:
   name: "Scan Indoor Units"
-  description: "Trigger the EGI VRF gateway to scan for connected indoor units. Detected units will be added as climate entities."
+  description: "Trigger a manual scan for indoor units connected to the EGI VRF gateway. Newly detected units will be added automatically."
   fields:
     entry_id:
-      description: "Optional config entry ID to target a specific gateway (if multiple instances). If omitted, all gateways will be scanned."
-      example: "your-entry-id"
+      name: "Entry ID"
+      description: "(Optional) Specific integration entry ID to scan. Leave blank to scan all entries."
+      example: "01JPZB2X3BT874XFX524FG0MAR"

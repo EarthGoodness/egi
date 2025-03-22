@@ -1,138 +1,99 @@
-"""Module for Modbus communication with EGI VRF Gateway."""
+"""Modbus client wrapper for EGI VRF Gateway."""
+import threading
 import logging
-from pymodbus.client import ModbusSerialClient
 
-from .const import (
-    DEFAULT_BAUDRATE, DEFAULT_PARITY, DEFAULT_STOPBITS, DEFAULT_SLAVE_ID,
-    MAX_IDU_UNITS, BASE_BRAND_ADDR, BRAND_REG_STRIDE, STATUS_REG_COUNT
-)
+from pymodbus.client import ModbusSerialClient, ModbusTcpClient
 
 _LOGGER = logging.getLogger(__name__)
 
-class EgiVrfModbusClient:
-    """Modbus RTU client for EGI VRF Gateway."""
-
-    def __init__(self, port: str, baudrate: int = DEFAULT_BAUDRATE,
-                 parity: str = DEFAULT_PARITY, stopbits: int = DEFAULT_STOPBITS,
-                 slave_id: int = DEFAULT_SLAVE_ID):
-        """Initialize and open serial connection."""
-        self._port = port
-        self._baudrate = baudrate
-        # parity should be 'N', 'E', or 'O'
-        self._parity = parity.upper() if parity else 'N'
-        self._stopbits = stopbits
+class EgiModbusClient:
+    def __init__(self, port=None, host=None, baudrate=9600, parity='E', stopbits=1, bytesize=8, slave_id=1, timeout=3):
+        """Initialize the Modbus client for either serial or TCP connection."""
         self._slave_id = slave_id
-        self._client = None
-        # Attempt to connect on init
-        try:
-            self._client = ModbusSerialClient(
-                port=self._port,
-                baudrate=self._baudrate,
-                parity=self._parity,
-                stopbits=self._stopbits,
-                bytesize=8,
-                timeout=3
-            )
-        except Exception as exc:
-            _LOGGER.error("Failed to initialize Modbus client: %s", exc)
-            self._client = None
-        else:
-            if not self._client.connect():
-                _LOGGER.error("Unable to open Modbus serial port %s", self._port)
-                # Keep client object; actual reads will handle reconnection if possible.
-
-    def close(self):
-        """Close the serial connection."""
-        if self._client:
-            try:
-                self._client.close()
-            except Exception as exc:
-                _LOGGER.warning("Error closing Modbus connection: %s", exc)
-        self._client = None
-
-    def _ensure_connected(self) -> bool:
-        """Ensure the connection is open. Try to reconnect if not."""
-        if self._client is None:
+        self._is_serial = host is None
+        self._lock = threading.Lock()
+        if self._is_serial:
             try:
                 self._client = ModbusSerialClient(
-                    port=self._port,
-                    baudrate=self._baudrate,
-                    parity=self._parity,
-                    stopbits=self._stopbits,
-                    bytesize=8,
-                    timeout=3
+                    port=port, 
+                    baudrate=baudrate, 
+                    parity=parity, 
+                    stopbits=stopbits, 
+                    bytesize=bytesize,
+                    timeout=timeout
                 )
-            except Exception as exc:
-                _LOGGER.error("Failed to reinitialize Modbus client: %s", exc)
+            except Exception as e:
+                _LOGGER.error("Error initializing ModbusSerialClient: %s", e)
+                self._client = None
+        else:
+            try:
+                self._client = ModbusTcpClient(host, port=port, timeout=timeout)
+            except Exception as e:
+                _LOGGER.error("Error initializing ModbusTcpClient: %s", e)
+                self._client = None
+
+    def connect(self):
+        """Connect to the Modbus device. Returns True if successful or already connected."""
+        if self._client is None:
+            return False
+        connected = self._client.connect()
+        if not connected:
+            _LOGGER.error("Failed to connect to EGI VRF Modbus gateway")
+        return connected
+
+    def close(self):
+        """Close the Modbus connection."""
+        try:
+            if self._client:
+                self._client.close()
+        except Exception as e:
+            _LOGGER.error("Error closing Modbus client: %s", e)
+
+    def read_holding_registers(self, address, count=1):
+        """Read holding registers. Returns list of register values or None on error."""
+        if self._client is None:
+            _LOGGER.error("Modbus client is not initialized")
+            return None
+        with self._lock:
+            try:
+                result = self._client.read_holding_registers(address=address, count=count, slave=self._slave_id)
+            except Exception as e:
+                _LOGGER.error("Modbus read_holding_registers exception: %s", e)
+                return None
+            if hasattr(result, 'isError') and result.isError():
+                _LOGGER.debug("Modbus read error for address %s count %s: %s", address, count, result)
+                return None
+            return getattr(result, 'registers', None)
+    
+    def write_register(self, address, value):
+        """Write a single register (0x06). Returns True if successful."""
+        if self._client is None:
+            _LOGGER.error("Modbus client is not initialized")
+            return False
+        with self._lock:
+            try:
+                result = self._client.write_register(address=address, value=value, slave=self._slave_id)
+            except Exception as e:
+                _LOGGER.error("Modbus write_register exception: %s", e)
                 return False
-        if not self._client.connect():
-            _LOGGER.error("Modbus client not connected (port %s)", self._port)
+            if hasattr(result, 'isError') and result.isError():
+                _LOGGER.error("Modbus write error for address %s: %s", address, result)
+                return False
+            return True
+    
+    def write_registers(self, address, values):
+        """Write multiple registers (0x10). Returns True if successful."""
+        if self._client is None:
+            _LOGGER.error("Modbus client is not initialized")
             return False
-        return True
+        with self._lock:
+            try:
+                result = self._client.write_registers(address=address, values=values, slave=self._slave_id)
+            except Exception as e:
+                _LOGGER.error("Modbus write_registers exception: %s", e)
+                return False
+            if hasattr(result, 'isError') and result.isError():
+                _LOGGER.error("Modbus write multiple error at address %s: %s", address, result)
+                return False
+            return True
 
-    def read_holding_registers(self, address: int, count: int = 1):
-        """Read holding registers starting at address."""
-        if not self._ensure_connected():
-            return None
-        try:
-            result = self._client.read_holding_registers(address=address, count=count, slave=self._slave_id)
-        except Exception as exc:
-            _LOGGER.error("Modbus read_holding_registers failed at 0x%04X: %s", address, exc)
-            return None
-        if result is None or result.isError():
-            _LOGGER.error("Modbus error reading 0x%04X (count %d): %s", address, count, result)
-            return None
-        return result.registers
-
-    def write_register(self, address: int, value: int):
-        """Write a single holding register."""
-        if not self._ensure_connected():
-            return False
-        try:
-            result = self._client.write_register(address, value, slave=self._slave_id)
-        except Exception as exc:
-            _LOGGER.error("Modbus write_register failed at 0x%04X: %s", address, exc)
-            return False
-        if result is None or result.isError():
-            _LOGGER.error("Modbus error writing 0x%04X = %s: %s", address, value, result)
-            return False
-        return True
-
-    def scan_idus(self):
-        """Scan for indoor units by reading brand registers. Returns dict of {idu_index: info} for each detected IDU."""
-        found = {}
-        for idx in range(MAX_IDU_UNITS):
-            addr = BASE_BRAND_ADDR + BRAND_REG_STRIDE * idx
-            reg = self.read_holding_registers(address=addr, count=1)
-            if reg is None:
-                _LOGGER.error("Scanning aborted at IDU %d due to communication error.", idx)
-                return None  # communication failure, abort and indicate failure
-            brand_code = reg[0] & 0xFF  # brand code is 1 byte (low byte)
-            if brand_code != 0:
-                info = {"brand_code": brand_code}
-                # Read the rest of performance registers for this IDU
-                perf_regs = self.read_holding_registers(address=addr + 1, count=BRAND_REG_STRIDE - 1)
-                if perf_regs is None:
-                    _LOGGER.warning("Could not read performance registers for IDU %d", idx)
-                    perf_regs = [0] * (BRAND_REG_STRIDE - 1)
-                # D8001: supported modes (2 bytes), D8002: supported wind speeds (1 byte),
-                # D8003: temp range (2 bytes), D8004: special features (1 byte).
-                if len(perf_regs) >= 1:
-                    supported_modes_word = perf_regs[0]
-                    info["supported_modes"] = supported_modes_word
-                if len(perf_regs) >= 2:
-                    supported_fan_byte = perf_regs[1] & 0xFF
-                    info["supported_fan_speeds"] = supported_fan_byte
-                if len(perf_regs) >= 3:
-                    temp_range_word = perf_regs[2]
-                    max_temp = (temp_range_word >> 8) & 0xFF
-                    min_temp = temp_range_word & 0xFF
-                    if min_temp > max_temp:
-                        min_temp, max_temp = max_temp, min_temp
-                    info["min_temp"] = min_temp
-                    info["max_temp"] = max_temp
-                if len(perf_regs) >= 4:
-                    special_byte = perf_regs[3] & 0xFF
-                    info["special_flags"] = special_byte
-                found[idx] = info
-        return found
