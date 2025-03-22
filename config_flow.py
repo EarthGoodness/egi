@@ -44,11 +44,8 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         return EgiVrfOptionsFlowHandler(config_entry)
 
-
 class EgiVrfOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an options flow for existing EGI VRF config entry."""
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage the integration options."""
@@ -58,6 +55,7 @@ class EgiVrfOptionsFlowHandler(config_entries.OptionsFlow):
             if parity_name in PARITY_OPTIONS:
                 user_input[CONF_PARITY] = PARITY_OPTIONS[parity_name]
             return self.async_create_entry(title="", data=user_input)
+
         # Current settings as defaults
         current = {**self.config_entry.data, **(self.config_entry.options or {})}
         data_schema = vol.Schema({
@@ -67,6 +65,7 @@ class EgiVrfOptionsFlowHandler(config_entries.OptionsFlow):
             vol.Optional(CONF_SLAVE_ID, default=current.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)): vol.Coerce(int),
             vol.Optional(CONF_POLL_INTERVAL, default=current.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)): vol.Coerce(int),
         })
+
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
     def _parity_display(self, parity_char):

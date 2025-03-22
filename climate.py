@@ -4,8 +4,9 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVACMode, ClimateEntityFeature
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN
 
@@ -39,14 +40,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.debug("Adding new climate entity for unit %d", uid)
         async_add_entities([EgiVrfClimate(coordinator, entry, uid)])
     entry.async_on_unload(
-        hass.helpers.dispatcher.async_dispatcher_connect(
-            f"{DOMAIN}_{entry.entry_id}_new_device", handle_new_unit
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_{entry.entry_id}_new_device", handle_new_unit
         )
     )
 
 class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
     """Representation of a VRF indoor unit as a Climate entity."""
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
 
     def __init__(self, coordinator, entry, unit_id: int):

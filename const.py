@@ -19,7 +19,7 @@ DEFAULT_POLL_INTERVAL = 30  # seconds
 
 # Modbus addresses constants
 MAX_IDU_UNITS = 32
-BASE_BRAND_ADDR = 0xD8000  # base address for brand registers (D8000 in decimal notation)
+BASE_BRAND_ADDR = 8000  # base address for brand registers (D8000 in decimal notation)
 BRAND_REG_STRIDE = 5      # each IDU performance info block size in registers
 STATUS_REG_COUNT = 6      # number of registers per IDU status
 

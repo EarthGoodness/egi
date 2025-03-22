@@ -71,49 +71,29 @@ class EgiVrfModbusClient:
         return True
 
     def read_holding_registers(self, address: int, count: int = 1):
-        """Read holding registers starting at address. Returns list of values or None on failure."""
+        """Read holding registers starting at address."""
         if not self._ensure_connected():
             return None
         try:
-            result = self._client.read_holding_registers(address=address, count=count, unit=self._slave_id)
+            result = self._client.read_holding_registers(address=address, count=count, slave=self._slave_id)
         except Exception as exc:
             _LOGGER.error("Modbus read_holding_registers failed at 0x%04X: %s", address, exc)
-            # attempt reconnect and retry once
-            if self._client:
-                try:
-                    self._client.connect()
-                except Exception:
-                    pass
-            try:
-                result = self._client.read_holding_registers(address=address, count=count, unit=self._slave_id)
-            except Exception as exc2:
-                _LOGGER.error("Retry read_holding_registers failed at 0x%04X: %s", address, exc2)
-                return None
-        if result is None or (hasattr(result, "isError") and result.isError()):
+            return None
+        if result is None or result.isError():
             _LOGGER.error("Modbus error reading 0x%04X (count %d): %s", address, count, result)
             return None
         return result.registers
 
     def write_register(self, address: int, value: int):
-        """Write a single holding register. Returns True if successful."""
+        """Write a single holding register."""
         if not self._ensure_connected():
             return False
         try:
-            result = self._client.write_register(address, value, unit=self._slave_id)
+            result = self._client.write_register(address, value, slave=self._slave_id)
         except Exception as exc:
             _LOGGER.error("Modbus write_register failed at 0x%04X: %s", address, exc)
-            # reconnect and retry once
-            if self._client:
-                try:
-                    self._client.connect()
-                except Exception:
-                    pass
-            try:
-                result = self._client.write_register(address, value, unit=self._slave_id)
-            except Exception as exc2:
-                _LOGGER.error("Retry write_register failed at 0x%04X: %s", address, exc2)
-                return False
-        if result is None or (hasattr(result, "isError") and result.isError()):
+            return False
+        if result is None or result.isError():
             _LOGGER.error("Modbus error writing 0x%04X = %s: %s", address, value, result)
             return False
         return True

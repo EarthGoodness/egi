@@ -1,9 +1,10 @@
 """EGI VRF Custom Integration - connects to VRF Gateway via Modbus."""
 import logging
+import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from .const import DOMAIN, CONF_PORT, CONF_BAUDRATE, CONF_PARITY, CONF_STOPBITS, CONF_SLAVE_ID, CONF_POLL_INTERVAL, \
     DEFAULT_BAUDRATE, DEFAULT_PARITY, DEFAULT_STOPBITS, DEFAULT_SLAVE_ID, DEFAULT_POLL_INTERVAL
 from .modbus_client import EgiVrfModbusClient
@@ -63,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.services.async_register(DOMAIN, "scan_idus", handle_scan_service)
 
     # Register devices in the Device Registry for the gateway and each unit
-    device_registry = hass.helpers.device_registry.async_get(hass)
+    device_registry = async_get_device_registry(hass)
     gateway_id = f"{DOMAIN}_{entry.entry_id}"
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
