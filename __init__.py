@@ -3,17 +3,19 @@ import logging
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 
-from . import const, modbus_client, coordinator
+from . import const, coordinator
+from .modbus_client import EgiModbusClient
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["button", "climate"]
+PLATFORMS = ["climate", "button"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up EGI VRF integration from a config entry."""
     hass.data.setdefault(const.DOMAIN, {})
 
-    # Initialize Modbus client in a thread-safe manner
+    # Initialize Modbus client
     client = await hass.async_add_executor_job(_init_modbus_client, entry)
     if client is None:
         raise ConfigEntryNotReady("Modbus connection failed")
@@ -52,10 +54,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         async_handle_rescan_service,
     )
 
+    # Register the gateway device with global VRF brand name
+    device_registry = async_get_device_registry(hass)
+    gateway_id = f"gateway_{entry.entry_id}"
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(const.DOMAIN, gateway_id)},
+        name="VRF Gateway",
+        manufacturer="EGI",
+        model="VRF Gateway light"
+    )
+
+    # Inject global brand name
+    if vrf_coordinator.gateway_brand_code:
+        device_registry.async_update_device(
+            device.id,
+            sw_version="1.0",
+            configuration_url=None,
+            name_by_user=f"{vrf_coordinator.gateway_brand_name} VRF Gateway"
+        )
+
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Add listener for config updates
+    # Handle config entry reload
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
@@ -67,7 +89,7 @@ def _init_modbus_client(entry):
     slave_id = entry.data.get("slave_id", const.DEFAULT_SLAVE_ID)
     try:
         if conn_type == "serial":
-            client = modbus_client.EgiModbusClient(
+            client = EgiModbusClient(
                 port=entry.data.get("port", const.DEFAULT_PORT),
                 baudrate=entry.data.get("baudrate", const.DEFAULT_BAUDRATE),
                 parity=entry.data.get("parity", const.DEFAULT_PARITY),
@@ -75,8 +97,8 @@ def _init_modbus_client(entry):
                 bytesize=entry.data.get("bytesize", const.DEFAULT_BYTESIZE),
                 slave_id=slave_id,
             )
-        else:  # TCP
-            client = modbus_client.EgiModbusClient(
+        else:
+            client = EgiModbusClient(
                 host=entry.data.get("host"),
                 port=entry.data.get("port", 502),
                 slave_id=slave_id,
@@ -95,8 +117,8 @@ def _init_modbus_client(entry):
 def _scan_devices(client):
     """Synchronously scan available indoor units."""
     found = []
-    for system in range(4):  # systems 1 to 4
-        for index in range(32):  # IDUs 0-31 per system
+    for system in range(4):  # supports up to 4 logical blocks
+        for index in range(32):
             addr = (system * 32 + index) * const.STATUS_REG_COUNT
             result = client.read_holding_registers(addr, const.STATUS_REG_COUNT)
             if result and any(val != 0 for val in result):
@@ -128,9 +150,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if coordinator:
             coordinator.update_interval = None
 
-        # Unregister service if no entries remain
         if not hass.data[const.DOMAIN]:
             hass.services.async_remove(const.DOMAIN, "scan_idus")
+
     return unload_ok
 
 

@@ -25,9 +25,8 @@ class EgiVrfRescanButton(ButtonEntity):
         entry_id = config_entry.entry_id
         self._attr_device_info = {
             "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
-            "name": "EGI VRF Gateway",
             "manufacturer": "EGI",
-            "model": "VRF Gateway (Modbus RTU)"
+            "model": "VRF Gateway light"
         }
 
     async def async_press(self):

@@ -1,6 +1,6 @@
 {
   "domain": "egi_vrf",
-  "name": "EGI VRF Modbus RTU",
+  "name": "EGI VRF Gateway",
   "version": "1.0.0",
   "config_flow": true,
   "documentation": "",

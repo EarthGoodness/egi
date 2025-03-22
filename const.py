@@ -32,3 +32,34 @@ STATUS_BASE_ADDR = 0          # Starting register address for status blocks (D00
 STATUS_REG_COUNT = 6          # Number of registers per indoor unit status block
 CONTROL_BASE_ADDR = 4000      # Starting register address for control blocks (D4000)
 CONTROL_REG_COUNT = 4         # Number of registers per indoor unit control block
+BRAND_REG_STRIDE = 5  # Each IDU's brand data takes 5 registers: 8000–8004
+
+# Optional: VRF brand code mapping for human-friendly logs
+BRAND_NAMES = {
+    0x01: "Hitachi",
+    0x02: "Daikin",
+    0x03: "Toshiba",
+    0x04: "Mitsubishi Heavy",
+    0x05: "Mitsubishi",
+    0x06: "Gree",
+    0x07: "Hisense",
+    0x08: "Midea",
+    0x09: "Haier",
+    0x0A: "LG",
+    0x0B: "Default",
+    0x0C: "Default",
+    0x0D: "Samsung",
+    0x0E: "AUX",
+    0x0F: "Matsushita",
+    0x10: "York",
+    0x15: "McQuay",
+    0x18: "TCL",
+    0x1A: "Tianjia",
+    0x23: "York Water",
+    0x24: "Cool Wind",
+    0x25: "Qingdao York",
+    0x26: "Fujitsu",
+    0x65: "Emerson Water",
+    0x66: "McQuay Water",
+    0xFF: "Simulator"
+}

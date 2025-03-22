@@ -96,4 +96,3 @@ class EgiModbusClient:
                 _LOGGER.error("Modbus write multiple error at address %s: %s", address, result)
                 return False
             return True
-
