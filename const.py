@@ -1,0 +1,7 @@
+"""Constants for the EGI VRF integration."""
+
+DOMAIN = "egi_vrf"
+DEFAULT_BAUDRATE = 9600
+DEFAULT_PARITY = "E"
+DEFAULT_STOPBITS = 1
+DEFAULT_SLAVE = 1
