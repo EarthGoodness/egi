@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     gateway_id = f"gateway_{entry.entry_id}"
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(const.DOMAIN, gateway_id)},
+        identifiers={(const.DOMAIN, f"gateway_{entry.entry_id}")},
         name="VRF Gateway",
         manufacturer="EGI",
         model="VRF Gateway light"
