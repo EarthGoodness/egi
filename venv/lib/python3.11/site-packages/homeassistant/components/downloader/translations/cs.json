@@ -1,0 +1,26 @@
+{
+    "services": {
+        "download_file": {
+            "description": "St\u00e1hne soubor do um\u00edst\u011bn\u00ed pro stahov\u00e1n\u00ed.",
+            "fields": {
+                "filename": {
+                    "description": "Ur\u010d\u00ed n\u00e1zev souboru.",
+                    "name": "N\u00e1zev souboru"
+                },
+                "overwrite": {
+                    "description": "Zda se m\u00e1 soubor p\u0159epsat, nebo ne.",
+                    "name": "P\u0159epsat"
+                },
+                "subdir": {
+                    "description": "St\u00e1hne do podadres\u00e1\u0159e.",
+                    "name": "Podadres\u00e1\u0159"
+                },
+                "url": {
+                    "description": "URL souboru ke sta\u017een\u00ed.",
+                    "name": "URL"
+                }
+            },
+            "name": "St\u00e1hnout soubor"
+        }
+    }
+}

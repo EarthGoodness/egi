@@ -1,0 +1,67 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_station": "Nie mo\u017cna znale\u017a\u0107 stacji pogodowej o podanej nazwie",
+            "more_stations": "Znaleziono wiele stacji pogodowych o podanej nazwie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "station": "Stacja"
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "precipitation": {
+                "state": {
+                    "drizzle": "M\u017cawka",
+                    "freezing_rain": "Marzn\u0105cy deszcz",
+                    "hail": "Grad",
+                    "no": "brak",
+                    "none": "brak",
+                    "rain": "Deszcz",
+                    "snow": "\u015anieg"
+                }
+            },
+            "precipitation_amountname": {
+                "state": {
+                    "error": "B\u0142\u0105d",
+                    "heavy_rain": "Ulewa",
+                    "heavy_snow": "\u015anie\u017cyca",
+                    "heavy_snow_rain": "Ulewny deszcz ze \u015bniegiem",
+                    "mild_rain": "\u0141agodny deszcz",
+                    "mild_snow": "\u0141agodny \u015bnieg",
+                    "none": "brak",
+                    "other": "Inna",
+                    "unknown": "Nieznana"
+                }
+            },
+            "wind_direction_text": {
+                "state": {
+                    "east": "Wsch\u00f3d",
+                    "north": "P\u00f3\u0142noc",
+                    "north_east": "P\u00f3\u0142nocny wsch\u00f3d",
+                    "north_west": "P\u00f3\u0142nocny zach\u00f3d",
+                    "south": "Po\u0142udnie",
+                    "south_east": "Po\u0142udniowy wsch\u00f3d",
+                    "south_west": "Po\u0142udniowy zach\u00f3d",
+                    "west": "Zach\u00f3d"
+                }
+            }
+        }
+    }
+}

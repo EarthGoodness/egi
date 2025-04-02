@@ -1,0 +1,19 @@
+{
+    "exceptions": {
+        "client_error": {
+            "message": "Kaynak istenirken bir hata olu\u015ftu"
+        },
+        "decoding_error": {
+            "message": "Sunucudan gelen yan\u0131t\u0131n kodu {decoding_type} olarak \u00e7\u00f6z\u00fclemedi"
+        },
+        "timeout": {
+            "message": "Sunucudan yan\u0131t beklenirken zaman a\u015f\u0131m\u0131"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "YAML yap\u0131land\u0131rmas\u0131ndan RESTful komutlar\u0131n\u0131 yeniden y\u00fckler.",
+            "name": "Tekrar y\u00fckle"
+        }
+    }
+}

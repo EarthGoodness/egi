@@ -1,0 +1,2 @@
+[pytest11]
+test-groups = pytest_test_groups

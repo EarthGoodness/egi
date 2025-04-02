@@ -1,0 +1,135 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty",
+            "already_in_progress": "M\u00e4\u00e4ritysprosessi on jo k\u00e4ynniss\u00e4",
+            "no_devices_found": "Verkosta ei l\u00f6ytynyt laitteita",
+            "reauth_successful": "Uudelleentodennus onnistui"
+        },
+        "error": {
+            "decryption_failed": "Toimitettu sidonta-avain ei toiminut, sensoritietoja ei voitu purkaa. Tarkista se ja yrit\u00e4 uudelleen.",
+            "expected_24_characters": "Odotettiin 24 merkin heksadesimaalista sidonta-avainta.",
+            "expected_32_characters": "Odotettiin 32 merkin pituista heksadesimaalilukua."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Haluatko m\u00e4\u00e4ritt\u00e4\u00e4 {name}?"
+            },
+            "confirm_slow": {
+                "description": "T\u00e4st\u00e4 laitteesta ei ole l\u00e4hetetty l\u00e4hetyst\u00e4 viimeisen minuutin aikana, joten emme ole varmoja, k\u00e4ytt\u00e4\u00e4k\u00f6 laite salausta vai ei. T\u00e4m\u00e4 voi johtua siit\u00e4, ett\u00e4 laite k\u00e4ytt\u00e4\u00e4 hidasta l\u00e4hetysv\u00e4li\u00e4. Vahvista, ett\u00e4 lis\u00e4\u00e4t t\u00e4m\u00e4n laitteen kuitenkin, niin seuraavan kerran, kun l\u00e4hetys vastaanotetaan, sinua pyydet\u00e4\u00e4n sy\u00f6tt\u00e4m\u00e4\u00e4n sen sidonta-avain, jos sit\u00e4 tarvitaan."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Sensorin l\u00e4hett\u00e4m\u00e4 data on salattu. Sen salauksen purkamiseksi tarvitsemme 32-merkkisen heksadesimaalilukuavaimen."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "Senso l\u00e4hett\u00e4m\u00e4t tiedot salataan. Sen purkamiseen tarvitaan 24-merkkinen heksadesimaalinen sidonta-avain."
+            },
+            "user": {
+                "data": {
+                    "address": "Laite"
+                },
+                "description": "Valitse laite, jonka haluat m\u00e4\u00e4ritt\u00e4\u00e4"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "double_press": "Kaksoispainallus",
+            "long_press": "Pitk\u00e4 painallus",
+            "motion_detected": "Liikett\u00e4 havaittu",
+            "press": "Paina",
+            "rotate_left": "K\u00e4\u00e4nn\u00e4 vasemmalle",
+            "rotate_left_pressed": "K\u00e4\u00e4nn\u00e4 vasemmalle (painettuna)",
+            "rotate_right": "K\u00e4\u00e4nn\u00e4 oikealle",
+            "rotate_right_pressed": "K\u00e4\u00e4nn\u00e4 oikealle (painettuna)"
+        },
+        "trigger_type": {
+            "button": "Painike \"{subtype}\"",
+            "button_air_exchange": "Painike Ilmanvaihto \"{subtype}\"",
+            "button_brightness": "Painikkeen kirkkaus \"{subtype}\"",
+            "button_color_temperature": "Painike V\u00e4ril\u00e4mp\u00f6tila \"{subtype}\"",
+            "button_decrease_speed": "Painike Laske nopeutta \" {subtype} \"",
+            "button_decrease_wind_speed": "Painike Laske tuulen nopeutta \"{subtype}\"",
+            "button_dry": "Painike kuivaus \" {subtype} \"",
+            "button_fan": "Painike Tuuletin \"{subtype}\"",
+            "button_heat": "Painike L\u00e4mmitys \"{subtype}\"",
+            "button_increase_speed": "Painike Lis\u00e4\u00e4 nopeutta \" {subtype} \"",
+            "button_increase_wind_speed": "Painike Lis\u00e4\u00e4 tuulen nopeutta \"{subtype}\"",
+            "button_left": "Vasen painike \"{subtype}\"",
+            "button_light": "Painikkeen valo \"{subtype}\"",
+            "button_m": "Painike M \"{subtype}\"",
+            "button_middle": "Painike keskell\u00e4 \"{subtype}\"",
+            "button_min": "Painike Min \"{subtype}\"",
+            "button_off": "Painike pois p\u00e4\u00e4lt\u00e4 \"{subtype}\"",
+            "button_on": "Painike p\u00e4\u00e4lle \"{subtype}\"",
+            "button_plus": "Painike lis\u00e4\u00e4 \"{subtype}\"",
+            "button_power": "Painike p\u00e4\u00e4lle \"{subtype}\"",
+            "button_right": "Painike oikealle \"{subtype}\"",
+            "button_stop": "Painike Pys\u00e4yt\u00e4 \"{subtype}\"",
+            "button_swing": "Painike heilutus \"{subtype}\"",
+            "button_timer_30_minutes": "Painikeajastin 30 minuuttia \"{subtype}\"",
+            "button_timer_60_minutes": "Painikeajastin 30 minuuttia \"{subtype}\"",
+            "button_wind_mode": "Painike Tuulen tila \"{subtype}\"",
+            "button_wind_speed": "Painike Tuulen nopeus \" {subtype} \"",
+            "cube": "{subtype}",
+            "dimmer": "{subtype}",
+            "motion": "{subtype}",
+            "motion_detected": "Liikett\u00e4 havaittu"
+        }
+    },
+    "entity": {
+        "event": {
+            "button": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "double_press": "Kaksoispainallus",
+                            "long_press": "Pitk\u00e4 painallus",
+                            "press": "Paina"
+                        }
+                    }
+                }
+            },
+            "cube": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "rotate_left": "K\u00e4\u00e4nn\u00e4 vasemmalle",
+                            "rotate_right": "K\u00e4\u00e4nn\u00e4 oikealle"
+                        }
+                    }
+                }
+            },
+            "dimmer": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press": "Pitk\u00e4 painallus",
+                            "press": "Paina",
+                            "rotate_left": "K\u00e4\u00e4nn\u00e4 vasemmalle",
+                            "rotate_left_pressed": "K\u00e4\u00e4nn\u00e4 vasemmalle (painettuna)",
+                            "rotate_right": "K\u00e4\u00e4nn\u00e4 oikealle",
+                            "rotate_right_pressed": "K\u00e4\u00e4nn\u00e4 oikealle (painettuna)"
+                        }
+                    }
+                }
+            },
+            "motion": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "motion_detected": "Liikett\u00e4 havaittu"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

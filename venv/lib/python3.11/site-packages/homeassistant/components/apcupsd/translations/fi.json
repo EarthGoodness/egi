@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty",
+            "no_status": "Is\u00e4nt\u00e4 ei raportoi tilaa"
+        },
+        "error": {
+            "cannot_connect": "Yhteyden muodostaminen ep\u00e4onnistui"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Palvelin",
+                    "port": "Portti"
+                },
+                "description": "Kirjoita is\u00e4nt\u00e4 ja portti, jossa apcupsd NIS:\u00e4\u00e4 k\u00e4ytet\u00e4\u00e4n."
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "APC UPS Daemon -palvelun m\u00e4\u00e4ritt\u00e4minen YAML:n avulla poistetaan.\n\nOlemassa oleva YAML-konfiguraatiosi on tuotu k\u00e4ytt\u00f6liittym\u00e4\u00e4n automaattisesti.\n\nPoista APC UPS Daemon YAML -m\u00e4\u00e4ritys configuration.yaml-tiedostosta ja k\u00e4ynnist\u00e4 Home Assistant uudelleen ongelman korjaamiseksi.",
+            "title": "APC UPS Daemon YAML-konfiguraatio poistetaan."
+        }
+    }
+}

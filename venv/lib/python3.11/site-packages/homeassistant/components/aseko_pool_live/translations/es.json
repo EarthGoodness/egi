@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "alarm": {
+                "name": "Alarma"
+            },
+            "water_flow": {
+                "name": "Caudal de agua"
+            }
+        },
+        "sensor": {
+            "air_temperature": {
+                "name": "Temperatura del aire"
+            },
+            "free_chlorine": {
+                "name": "Cloro libre"
+            },
+            "water_temperature": {
+                "name": "Temperatura del agua"
+            }
+        }
+    }
+}

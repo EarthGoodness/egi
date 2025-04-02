@@ -1,0 +1,26 @@
+{
+    "services": {
+        "download_file": {
+            "description": "\u4e0b\u8f09\u6a94\u6848\u81f3\u4e0b\u8f09\u4f4d\u7f6e\u3002",
+            "fields": {
+                "filename": {
+                    "description": "\u6c7a\u5b9a\u6a94\u6848\u540d\u7a31\u3002",
+                    "name": "\u6a94\u540d"
+                },
+                "overwrite": {
+                    "description": "\u662f\u5426\u8981\u8986\u84cb\u6a94\u6848\u3002",
+                    "name": "\u8986\u84cb"
+                },
+                "subdir": {
+                    "description": "\u4e0b\u8f09\u81f3\u5b50\u8cc7\u6599\u593e\u3002",
+                    "name": "\u5b50\u8cc7\u6599\u593e"
+                },
+                "url": {
+                    "description": "\u6b32\u4e0b\u8f09\u7684\u6a94\u6848 URL\u3002",
+                    "name": "\u7db2\u5740"
+                }
+            },
+            "name": "\u4e0b\u8f09\u6a94\u6848"
+        }
+    }
+}

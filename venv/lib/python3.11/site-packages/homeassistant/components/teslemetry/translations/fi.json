@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Yhteyden muodostaminen ep\u00e4onnistui",
+            "invalid_access_token": "Virheellinen k\u00e4ytt\u00f6oikeustunnus",
+            "subscription_required": "Tilaus vaaditaan, k\u00e4y osoitteessa {short_url}",
+            "unknown": "Odottamaton virhe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "K\u00e4ytt\u00f6oikeustunnus"
+                },
+                "description": "Anna k\u00e4ytt\u00f6oikeustunnus osoitteesta {url} ."
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "driver_temp": {
+                "name": "Ilmasto",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "camp": "Leiritila",
+                            "dog": "Koira-tila",
+                            "keep": "Pid\u00e4-tila",
+                            "off": "Normaali"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "services": {
+        "download_file": {
+            "description": "Laeb faili allalaadimiskohta.",
+            "fields": {
+                "filename": {
+                    "description": "M\u00e4\u00e4ra failinimi.",
+                    "name": "Faili nimi"
+                },
+                "overwrite": {
+                    "description": "Kas fail \u00fcle kirjutada v\u00f5i mitte.",
+                    "name": "Kirjuta \u00fcle"
+                },
+                "subdir": {
+                    "description": "Lae alla alamkausta.",
+                    "name": "Alamkaust"
+                },
+                "url": {
+                    "description": "Allalaaditava faili URL.",
+                    "name": "URL"
+                }
+            },
+            "name": "Lae fail alla"
+        }
+    }
+}

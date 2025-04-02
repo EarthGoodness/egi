@@ -1,0 +1,14 @@
+{
+    "services": {
+        "set_away_mode": {
+            "description": "St\u00e4ller in hemma/borta-l\u00e4get f\u00f6r en Streamlabs vattenmonitor.",
+            "fields": {
+                "away_mode": {
+                    "description": "Hemma eller borta",
+                    "name": "Bortal\u00e4ge"
+                }
+            },
+            "name": "St\u00e4ll in bortal\u00e4ge"
+        }
+    }
+}

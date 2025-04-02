@@ -1,0 +1,135 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Nastaven\u00ed ji\u017e prob\u00edh\u00e1",
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "decryption_failed": "Poskytnut\u00fd kl\u00ed\u010d vazby nefungoval, data senzoru nelze de\u0161ifrovat. Zkontrolujte to a zkuste to znovu.",
+            "expected_24_characters": "O\u010dek\u00e1v\u00e1n 24znakov\u00fd hexadecim\u00e1ln\u00ed kl\u00ed\u010d vazby.",
+            "expected_32_characters": "O\u010dek\u00e1v\u00e1n 32znakov\u00fd hexadecim\u00e1ln\u00ed kl\u00ed\u010d vazby."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Chcete nastavit {name}?"
+            },
+            "confirm_slow": {
+                "description": "V posledn\u00ed minut\u011b se z tohoto za\u0159\u00edzen\u00ed nevys\u00edlalo, tak\u017ee si nejsme jisti, zda toto za\u0159\u00edzen\u00ed pou\u017e\u00edv\u00e1 \u0161ifrov\u00e1n\u00ed nebo ne. M\u016f\u017ee to b\u00fdt zp\u016fsobeno t\u00edm, \u017ee za\u0159\u00edzen\u00ed pou\u017e\u00edv\u00e1 pomal\u00fd interval vys\u00edl\u00e1n\u00ed. Potvr\u010fte, \u017ee chcete toto za\u0159\u00edzen\u00ed p\u0159esto p\u0159idat. P\u0159i p\u0159\u00ed\u0161t\u00edm p\u0159\u00edjmu vys\u00edl\u00e1n\u00ed budete vyzv\u00e1ni k zad\u00e1n\u00ed jeho kl\u00ed\u010de vazby, pokud je to pot\u0159eba."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Kl\u00ed\u010d vazby"
+                },
+                "description": "Data senzoru vys\u00edlan\u00e1 senzorem jsou \u0161ifrov\u00e1na. Abychom jej de\u0161ifrovali, pot\u0159ebujeme 32znakov\u00fd hexadecim\u00e1ln\u00ed kl\u00ed\u010d vazby."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Kl\u00ed\u010d vazby"
+                },
+                "description": "Data senzoru vys\u00edlan\u00e1 senzorem jsou \u0161ifrov\u00e1na. Abychom jej de\u0161ifrovali, pot\u0159ebujeme 24znakov\u00fd hexadecim\u00e1ln\u00ed kl\u00ed\u010d vazby."
+            },
+            "user": {
+                "data": {
+                    "address": "Za\u0159\u00edzen\u00ed"
+                },
+                "description": "Zvolte za\u0159\u00edzen\u00ed, kter\u00e9 chcete nastavit"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "double_press": "Dvojit\u00e9 stisknut\u00ed",
+            "long_press": "Dlouh\u00e9 stisknut\u00ed",
+            "motion_detected": "Detekov\u00e1n pohyb",
+            "press": "Stisknut\u00ed",
+            "rotate_left": "Oto\u010den\u00ed vlevo",
+            "rotate_left_pressed": "Oto\u010den\u00ed vlevo (Stisknuto)",
+            "rotate_right": "Oto\u010den\u00ed vpravo",
+            "rotate_right_pressed": "Oto\u010den\u00ed vpravo (Stisknuto)"
+        },
+        "trigger_type": {
+            "button": "Tla\u010d\u00edtko \"{subtype}\"",
+            "button_air_exchange": "Tla\u010d\u00edtko V\u00fdm\u011bna vzduchu \"{subtype}\"",
+            "button_brightness": "Tla\u010d\u00edtko Jas \"{subtype}\"",
+            "button_color_temperature": "Tla\u010d\u00edtko Teplota barev \"{subtype}\"",
+            "button_decrease_speed": "Tla\u010d\u00edtko Sn\u00ed\u017eit rychlost \"{subtype}\"",
+            "button_decrease_wind_speed": "Tla\u010d\u00edtko Sn\u00ed\u017eit rychlost v\u011btru \"{subtype}\"",
+            "button_dry": "Tla\u010d\u00edtko Su\u0161it \"{subtype}\"",
+            "button_fan": "Tla\u010d\u00edtko Ventil\u00e1tor \"{subtype}\"",
+            "button_heat": "Tla\u010d\u00edtko Vyt\u00e1p\u011bt \"{subtype}\"",
+            "button_increase_speed": "Tla\u010d\u00edtko Zv\u00fd\u0161it rychlost \"{subtype}\"",
+            "button_increase_wind_speed": "Tla\u010d\u00edtko Zv\u00fd\u0161it rychlost v\u011btru \"{subtype}\"",
+            "button_left": "Lev\u00e9 tla\u010d\u00edtko \"{subtype}\"",
+            "button_light": "Tla\u010d\u00edtko Sv\u011btlo \"{subtype}\"",
+            "button_m": "Tla\u010d\u00edtko M \"{subtype}\"",
+            "button_middle": "St\u0159edn\u00ed tla\u010d\u00edtko \"{subtype}\"",
+            "button_min": "Tla\u010d\u00edtko Min. \"{subtype}\"",
+            "button_off": "Tla\u010d\u00edtko Vypnout \"{subtype}\"",
+            "button_on": "Tla\u010d\u00edtko Zapnout \"{subtype}\"",
+            "button_plus": "Tla\u010d\u00edtko Plus \"{subtype}\"",
+            "button_power": "Tla\u010d\u00edtko Nap\u00e1jen\u00ed \"{subtype}\"",
+            "button_right": "Prav\u00e9 tla\u010d\u00edtko \"{subtype}\"",
+            "button_stop": "Tla\u010d\u00edtko Stop \"{subtype}\"",
+            "button_swing": "Tla\u010d\u00edtko Kmit\u00e1n\u00ed \"{subtype}\"",
+            "button_timer_30_minutes": "Tla\u010d\u00edtko \u010casova\u010d na 30 minut \"{subtype}\"",
+            "button_timer_60_minutes": "Tla\u010d\u00edtko \u010casova\u010d na 30 minut \"{subtype}\"",
+            "button_wind_mode": "Tla\u010d\u00edtko Re\u017eim v\u011btru \"{subtype}\"",
+            "button_wind_speed": "Tla\u010d\u00edtko Rychlost v\u011btru \"{subtype}\"",
+            "cube": "{subtype}",
+            "dimmer": "{subtype}",
+            "motion": "{subtype}",
+            "motion_detected": "Detekov\u00e1n pohyb"
+        }
+    },
+    "entity": {
+        "event": {
+            "button": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "double_press": "Dvojit\u00e9 stisknut\u00ed",
+                            "long_press": "Dlouh\u00e9 stisknut\u00ed",
+                            "press": "Stisknut\u00ed"
+                        }
+                    }
+                }
+            },
+            "cube": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "rotate_left": "Oto\u010den\u00ed vlevo",
+                            "rotate_right": "Oto\u010den\u00ed vpravo"
+                        }
+                    }
+                }
+            },
+            "dimmer": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "long_press": "Dlouh\u00e9 stisknut\u00ed",
+                            "press": "Stisknut\u00ed",
+                            "rotate_left": "Oto\u010den\u00ed vlevo",
+                            "rotate_left_pressed": "Oto\u010den\u00ed vlevo (Stisknuto)",
+                            "rotate_right": "Oto\u010den\u00ed vpravo",
+                            "rotate_right_pressed": "Oto\u010den\u00ed vpravo (Stisknuto)"
+                        }
+                    }
+                }
+            },
+            "motion": {
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "motion_detected": "Detekov\u00e1n pohyb"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_access_token": "\u5b58\u53d6\u6b0a\u6756\u7121\u6548",
+            "subscription_required": "\u9700\u8981\u8a02\u95b1\u3001\u8acb\u53c3\u95b1 {short_url}",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\u5b58\u53d6\u6b0a\u6756"
+                },
+                "description": "\u8f38\u5165\u7531 {url} \u6240\u7372\u5f97\u7684\u5b58\u53d6\u6b0a\u6756\u3002"
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "driver_temp": {
+                "name": "\u6eab\u63a7",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "camp": "\u9732\u71df\u6a21\u5f0f",
+                            "dog": "\u905b\u72d7\u6a21\u5f0f",
+                            "keep": "\u6020\u901f\u6a21\u5f0f",
+                            "off": "\u4e00\u822c\u6a21\u5f0f"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

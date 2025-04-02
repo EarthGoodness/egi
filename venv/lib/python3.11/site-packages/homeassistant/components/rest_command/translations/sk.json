@@ -1,0 +1,19 @@
+{
+    "exceptions": {
+        "client_error": {
+            "message": "Pri vy\u017eiadan\u00ed prostriedku do\u0161lo k chybe"
+        },
+        "decoding_error": {
+            "message": "Odpove\u010f zo servera sa nepodarilo dek\u00f3dova\u0165 ako {decoding_type}"
+        },
+        "timeout": {
+            "message": "\u010casov\u00fd limit po\u010das \u010dakania na odpove\u010f zo servera"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Znova na\u010d\u00edta pr\u00edkazy RESTful z konfigur\u00e1cie YAML.",
+            "name": "Znovu na\u010d\u00edta\u0165"
+        }
+    }
+}

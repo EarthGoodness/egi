@@ -1,0 +1,167 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Jau sukonfig\u016bruota. Galima tik viena konfig\u016bracija.",
+            "cannot_connect": "Nepavyko prisijungti"
+        },
+        "error": {
+            "cannot_connect": "Nepavyko prisijungti",
+            "few": "ma\u017eai",
+            "many": "daug",
+            "one": "vienas",
+            "other": "tu\u0161\u010dia"
+        },
+        "step": {
+            "few": "ma\u017eai",
+            "many": "daug",
+            "one": "vienas",
+            "other": "tu\u0161\u010dia",
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Prievadas"
+                },
+                "data_description": {
+                    "host": "J\u016bs\u0173 RFXCOM RFXtrx \u012frenginio pagrindinio kompiuterio pavadinimas arba IP adresas."
+                },
+                "title": "Pasirinkite ry\u0161io adres\u0105"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Pasirinkite \u012frengin\u012f"
+                },
+                "title": "\u012erenginys"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB \u012frenginio kelias"
+                },
+                "title": "Kelias"
+            },
+            "user": {
+                "data": {
+                    "type": "Ry\u0161io tipas"
+                },
+                "title": "Pasirinkite ry\u0161io tip\u0105"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Si\u0173sti komand\u0105: {subtype}",
+            "send_status": "Si\u0173sti b\u016bsenos naujin\u012f: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Gauta komanda: {subtype}",
+            "status": "Gauta b\u016bsena: {subtype}"
+        }
+    },
+    "entity": {
+        "sensor": {
+            "chill": {
+                "name": "Atv\u0117sinkite"
+            },
+            "count": {
+                "name": "Suskai\u010diuoti"
+            },
+            "counter_value": {
+                "name": "Skaitiklio vert\u0117"
+            },
+            "current_ch_1": {
+                "name": "Dabartinis Ch. 1"
+            },
+            "current_ch_2": {
+                "name": "Dabartinis Ch. 2"
+            },
+            "current_ch_3": {
+                "name": "Dabartinis Ch. 3"
+            },
+            "forecast": {
+                "name": "Prognoz\u0117"
+            },
+            "forecast_status": {
+                "name": "Prognoz\u0117s b\u016bsena"
+            },
+            "humidity_status": {
+                "name": "Dr\u0117gm\u0117s b\u016bsena"
+            },
+            "instantaneous_power": {
+                "name": "Momentin\u0117 galia"
+            },
+            "sensor_status": {
+                "name": "Jutiklio b\u016bsena"
+            },
+            "sound": {
+                "name": "Garsas"
+            },
+            "temperature_2": {
+                "name": "Temperat\u016bra 2"
+            },
+            "total_energy_usage": {
+                "name": "Bendras energijos suvartojimas"
+            },
+            "uv_index": {
+                "name": "UV indeksas"
+            },
+            "wind_average_speed": {
+                "name": "V\u0117jo vidutinis greitis"
+            },
+            "wind_direction": {
+                "name": "V\u0117jo kryptis"
+            },
+            "wind_gust": {
+                "name": "V\u0117jo g\u016bsis"
+            }
+        }
+    },
+    "few": "ma\u017eai",
+    "many": "daug",
+    "one": "vienas",
+    "options": {
+        "error": {
+            "already_configured_device": "\u012erenginys jau sukonfig\u016bruotas",
+            "invalid_event_code": "Netinkamas \u012fvykio kodas",
+            "invalid_input_2262_off": "Netinkama komandos i\u0161jungti \u012fvestis",
+            "invalid_input_2262_on": "Netinkama \u012fvesties komandai \u012fjungti",
+            "invalid_input_off_delay": "Netinkama i\u0161jungimo delsos \u012fvestis",
+            "unknown": "Netik\u0117ta klaida"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "\u012egalinti automatin\u012f prid\u0117jim\u0105",
+                    "debug": "\u012egalinti derinim\u0105",
+                    "device": "Pasirinkite \u012frengin\u012f, kur\u012f norite konfig\u016bruoti",
+                    "event_code": "\u012eveskite \u012fvykio kod\u0105, kur\u012f norite prid\u0117ti",
+                    "protocols": "Protokolai"
+                },
+                "title": "Rfxtrx parinktys"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Duomen\u0173 bit\u0173 reik\u0161m\u0117 komandai i\u0161jungti",
+                    "command_on": "Duomen\u0173 bit\u0173 reik\u0161m\u0117 komandai \u012fjungti",
+                    "data_bit": "Duomen\u0173 bit\u0173 skai\u010dius",
+                    "off_delay": "I\u0161jungimo v\u0117lavimas",
+                    "off_delay_enabled": "\u012ejungti i\u0161jungimo dels\u0105",
+                    "replace_device": "Pasirinkite \u012frengin\u012f, kur\u012f norite pakeisti",
+                    "venetian_blind_mode": "Venecijos \u017ealiuzi\u0173 re\u017eimas"
+                },
+                "title": "Konfig\u016bruokite \u012frenginio parinktis"
+            }
+        }
+    },
+    "other": "tu\u0161\u010dia",
+    "services": {
+        "send": {
+            "description": "Per radij\u0105 siun\u010dia neapdorot\u0105 \u012fvyk\u012f.",
+            "fields": {
+                "event": {
+                    "description": "\u0160e\u0161ioliktain\u0117 eilut\u0117, kuri\u0105 reikia si\u0173sti.",
+                    "name": "\u012evykis"
+                }
+            },
+            "name": "Si\u0173sti"
+        }
+    }
+}

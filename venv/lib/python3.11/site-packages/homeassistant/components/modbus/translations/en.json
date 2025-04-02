@@ -1,0 +1,90 @@
+{
+    "issues": {
+        "deprecated_close_comm_config": {
+            "description": "Please remove the `{config_key}` key from the {integration} entry in your `configuration.yaml` file and restart Home Assistant to fix this issue. All errors will be reported, as `lazy_error_count` is accepted but ignored.",
+            "title": "`{config_key}` configuration key is being removed"
+        },
+        "deprecated_retries": {
+            "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nThe maximum number of retries is now fixed to 3.",
+            "title": "`{config_key}` configuration key is being removed"
+        },
+        "deprecated_retry_on_empty": {
+            "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nRetry on empty is automatically applied, see [the documentation]({url}) for other error handling parameters.",
+            "title": "`{config_key}` configuration key is being removed"
+        },
+        "removed_lazy_error_count": {
+            "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue. All errors will be reported, as lazy_error_count is accepted but ignored",
+            "title": "`{config_key}` configuration key is being removed"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Reloads all modbus entities.",
+            "name": "Reload"
+        },
+        "restart": {
+            "description": "Restarts modbus hub (if running stop then start).",
+            "fields": {
+                "hub": {
+                    "description": "Modbus hub name.",
+                    "name": "Hub"
+                }
+            },
+            "name": "Restart"
+        },
+        "stop": {
+            "description": "Stops modbus hub.",
+            "fields": {
+                "hub": {
+                    "description": "Modbus hub name.",
+                    "name": "Hub"
+                }
+            },
+            "name": "Stop"
+        },
+        "write_coil": {
+            "description": "Writes to a modbus coil.",
+            "fields": {
+                "address": {
+                    "description": "Address of the register to write to.",
+                    "name": "Address"
+                },
+                "hub": {
+                    "description": "Modbus hub name.",
+                    "name": "Hub"
+                },
+                "slave": {
+                    "description": "Address of the modbus unit/slave.",
+                    "name": "Slave"
+                },
+                "state": {
+                    "description": "State to write.",
+                    "name": "State"
+                }
+            },
+            "name": "Write coil"
+        },
+        "write_register": {
+            "description": "Writes to a modbus holding register.",
+            "fields": {
+                "address": {
+                    "description": "Address of the holding register to write to.",
+                    "name": "Address"
+                },
+                "hub": {
+                    "description": "Modbus hub name.",
+                    "name": "Hub"
+                },
+                "slave": {
+                    "description": "Address of the modbus unit/slave.",
+                    "name": "Slave"
+                },
+                "value": {
+                    "description": "Value (single value or array) to write.",
+                    "name": "Value"
+                }
+            },
+            "name": "Write register"
+        }
+    }
+}

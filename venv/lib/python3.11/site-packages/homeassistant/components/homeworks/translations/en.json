@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Could not connect to the controller.",
+            "duplicated_controller_id": "The controller name is already in use.",
+            "duplicated_host_port": "The specified host and port is already configured.",
+            "unknown_error": "Unexpected error"
+        },
+        "step": {
+            "import_controller_name": {
+                "data": {
+                    "name": "Controller name"
+                },
+                "data_description": {
+                    "name": "A unique name identifying the Lutron Homeworks controller"
+                },
+                "description": "Lutron Homeworks is no longer configured through configuration.yaml.\n\nPlease fill in the form to import the existing configuration to the UI."
+            },
+            "import_finish": {
+                "description": "The existing YAML configuration has succesfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Controller name",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "name": "A unique name identifying the Lutron Homeworks controller"
+                },
+                "description": "Add a Lutron Homeworks controller"
+            }
+        }
+    }
+}

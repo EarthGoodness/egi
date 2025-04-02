@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        }
+    },
+    "services": {
+        "speedtest": {
+            "description": "Utf\u00f6r omedelbart ett hastighetstest med Fast.com.",
+            "name": "Hastighetstest"
+        }
+    }
+}

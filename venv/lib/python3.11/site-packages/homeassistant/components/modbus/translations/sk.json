@@ -1,0 +1,90 @@
+{
+    "issues": {
+        "deprecated_close_comm_config": {
+            "description": "Odstr\u00e1\u0148te k\u013e\u00fa\u010d `{config_key}` z polo\u017eky {integration} v s\u00fabore `configuration.yaml` a re\u0161tartujte aplik\u00e1ciu Home Assistant, aby ste tento probl\u00e9m odstr\u00e1nili. V\u0161etky chyby bud\u00fa hl\u00e1sen\u00e9, preto\u017ee `lazy_error_count` je akceptovan\u00fd, ale ignorovan\u00fd.",
+            "title": "Konfigura\u010dn\u00fd k\u013e\u00fa\u010d `{config_key}` sa odstra\u0148uje"
+        },
+        "deprecated_retries": {
+            "description": "Odstr\u00e1\u0148te k\u013e\u00fa\u010d `{config_key}` z polo\u017eky {integration} v s\u00fabore configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant, aby ste tento probl\u00e9m odstr\u00e1nili.\n\nMaxim\u00e1lny po\u010det opakovan\u00ed je teraz stanoven\u00fd na 3.",
+            "title": "Konfigura\u010dn\u00fd k\u013e\u00fa\u010d `{config_key}` sa odstra\u0148uje"
+        },
+        "deprecated_retry_on_empty": {
+            "description": "Odstr\u00e1\u0148te k\u013e\u00fa\u010d `{config_key}` z polo\u017eky {integration} v s\u00fabore configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant, aby ste tento probl\u00e9m odstr\u00e1nili.\n\nAutomaticky sa pou\u017eije opakovanie pri vypr\u00e1zdnen\u00ed, \u010fal\u0161ie parametre spracovania ch\u00fdb n\u00e1jdete v [dokument\u00e1cii]({url}).",
+            "title": "Konfigura\u010dn\u00fd k\u013e\u00fa\u010d `{config_key}` sa odstra\u0148uje"
+        },
+        "removed_lazy_error_count": {
+            "description": "Odstr\u00e1\u0148te k\u013e\u00fa\u010d `{config_key}` z polo\u017eky {integration} v s\u00fabore configuration.yaml a re\u0161tartujte aplik\u00e1ciu Home Assistant, aby ste tento probl\u00e9m odstr\u00e1nili. V\u0161etky chyby bud\u00fa hl\u00e1sen\u00e9, preto\u017ee lazy_error_count je akceptovan\u00fd, ale ignorovan\u00fd",
+            "title": "Konfigura\u010dn\u00fd k\u013e\u00fa\u010d `{config_key}` sa odstra\u0148uje"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Znovu na\u010d\u00edta v\u0161etky entity modbus.",
+            "name": "Znovu na\u010d\u00edta\u0165"
+        },
+        "restart": {
+            "description": "Re\u0161tartuje modbusov\u00fd rozbo\u010dova\u010d (ak be\u017e\u00ed stop, potom start).",
+            "fields": {
+                "hub": {
+                    "description": "N\u00e1zov rozbo\u010dova\u010da Modbus.",
+                    "name": "Hub"
+                }
+            },
+            "name": "Re\u0161tart"
+        },
+        "stop": {
+            "description": "Zastav\u00ed rozbo\u010dova\u010d modbus.",
+            "fields": {
+                "hub": {
+                    "description": "N\u00e1zov rozbo\u010dova\u010da Modbus.",
+                    "name": "Hub"
+                }
+            },
+            "name": "Zastavi\u0165"
+        },
+        "write_coil": {
+            "description": "Z\u00e1pis do modbusovej cievky.",
+            "fields": {
+                "address": {
+                    "description": "Adresa registra, do ktor\u00e9ho sa m\u00e1 zapisova\u0165.",
+                    "name": "Adresa"
+                },
+                "hub": {
+                    "description": "N\u00e1zov rozbo\u010dova\u010da Modbus.",
+                    "name": "Hub"
+                },
+                "slave": {
+                    "description": "Adresa jednotky modbus/slave.",
+                    "name": "Slave"
+                },
+                "state": {
+                    "description": "Z\u00e1pis stavu.",
+                    "name": "Stav"
+                }
+            },
+            "name": "Zapisovacia cievka"
+        },
+        "write_register": {
+            "description": "Zapisuje do registra modbus.",
+            "fields": {
+                "address": {
+                    "description": "Adresa holdingov\u00e9ho registra, do ktor\u00e9ho sa m\u00e1 zapisova\u0165.",
+                    "name": "Adresa"
+                },
+                "hub": {
+                    "description": "N\u00e1zov rozbo\u010dova\u010da Modbus.",
+                    "name": "Hub"
+                },
+                "slave": {
+                    "description": "Adresa jednotky modbus/slave.",
+                    "name": "Slave"
+                },
+                "value": {
+                    "description": "Hodnota (jedna hodnota alebo pole) na z\u00e1pis.",
+                    "name": "Hodnota"
+                }
+            },
+            "name": "Zap\u00edsa\u0165 register"
+        }
+    }
+}

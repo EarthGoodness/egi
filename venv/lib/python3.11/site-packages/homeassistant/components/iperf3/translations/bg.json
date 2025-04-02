@@ -1,0 +1,11 @@
+{
+    "services": {
+        "speedtest": {
+            "fields": {
+                "host": {
+                    "name": "\u0410\u0434\u0440\u0435\u0441"
+                }
+            }
+        }
+    }
+}

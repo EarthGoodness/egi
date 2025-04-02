@@ -1,0 +1,19 @@
+{
+    "exceptions": {
+        "client_error": {
+            "message": "Ressursi taotlemisel ilmnes t\u00f5rge"
+        },
+        "decoding_error": {
+            "message": "Serveri vastust ei saanud dekodeerida kui {decoding_type}"
+        },
+        "timeout": {
+            "message": "Serveri vastuse ootamise ajal\u00f5pp"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Taaslaeb RESTful k\u00e4sud YAML-konfiguratsioonist.",
+            "name": "Taaslae"
+        }
+    }
+}

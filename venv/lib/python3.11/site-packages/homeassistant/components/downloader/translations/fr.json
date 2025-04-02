@@ -1,0 +1,26 @@
+{
+    "services": {
+        "download_file": {
+            "description": "T\u00e9l\u00e9charge un fichier vers l'emplacement de t\u00e9l\u00e9chargement.",
+            "fields": {
+                "filename": {
+                    "description": "D\u00e9termine le nom du fichier.",
+                    "name": "Nom du fichier"
+                },
+                "overwrite": {
+                    "description": "S'il faut \u00e9craser le fichier ou non.",
+                    "name": "\u00c9craser"
+                },
+                "subdir": {
+                    "description": "T\u00e9l\u00e9charger dans un sous-r\u00e9pertoire.",
+                    "name": "Sous-r\u00e9pertoire"
+                },
+                "url": {
+                    "description": "L'URL du fichier \u00e0 t\u00e9l\u00e9charger.",
+                    "name": "URL"
+                }
+            },
+            "name": "T\u00e9l\u00e9charger un fichier"
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "exceptions": {
+        "client_error": {
+            "message": "Si \u00e8 verificato un errore durante la richiesta della risorsa"
+        },
+        "decoding_error": {
+            "message": "Non \u00e8 stato possibile decodificare la risposta del server come {decoding_type}"
+        },
+        "timeout": {
+            "message": "Raggiunto il tempo limite in attesa di una risposta dal server"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "exceptions": {
+        "client_error": {
+            "message": "Beim Anfordern der Ressource ist ein Fehler aufgetreten"
+        },
+        "decoding_error": {
+            "message": "Die Antwort vom Server konnte nicht als {decoding_type} dekodiert werden"
+        },
+        "timeout": {
+            "message": "Zeit\u00fcberschreitung beim Warten auf eine Antwort vom Server"
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "L\u00e4dt RESTful-Befehle aus der YAML-Konfiguration neu.",
+            "name": "Neu laden"
+        }
+    }
+}

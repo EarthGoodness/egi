@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim anahtar\u0131",
+            "subscription_required": "Abonelik gereklidir, l\u00fctfen {short_url} adresini ziyaret edin",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Eri\u015fim anahtar\u0131"
+                },
+                "description": "{url} adresinden bir eri\u015fim anahtar\u0131 girin."
+            }
+        }
+    },
+    "entity": {
+        "climate": {
+            "driver_temp": {
+                "name": "\u0130klimlendirme",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "camp": "Kamp modu",
+                            "dog": "K\u00f6pek modu",
+                            "keep": "Tutma modu",
+                            "off": "Normal"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

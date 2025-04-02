@@ -1,0 +1,50 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "max_tokens": "Maximalt antal tokens som ska returneras i svaret",
+                    "model": "Modell f\u00f6r f\u00e4rdigst\u00e4llande",
+                    "prompt": "Prompt-mall",
+                    "temperature": "Temperatur",
+                    "top_p": "Top-P"
+                }
+            }
+        }
+    },
+    "services": {
+        "generate_image": {
+            "description": "F\u00f6rvandla en prompt till en bild",
+            "fields": {
+                "config_entry": {
+                    "description": "Den konfigurationspost som ska anv\u00e4ndas f\u00f6r den h\u00e4r tj\u00e4nsten",
+                    "name": "Konfigurationspost"
+                },
+                "prompt": {
+                    "description": "Texten som ska omvandlas till bild",
+                    "example": "Ett foto p\u00e5 en hund",
+                    "name": "Prompt"
+                },
+                "size": {
+                    "description": "Storleken p\u00e5 bilden som ska genereras",
+                    "name": "Storlek"
+                }
+            },
+            "name": "Generera bild"
+        }
+    }
+}

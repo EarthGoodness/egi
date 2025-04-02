@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "invalid_ip_address": "Ogiltig IP-adress."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "count": "Antal ping",
+                    "host": "V\u00e4rd"
+                },
+                "description": "Med Ping kan du kontrollera om en v\u00e4rd \u00e4r tillg\u00e4nglig.",
+                "title": "L\u00e4gg till Ping"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "invalid_ip_address": "Ogiltig IP-adress."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "count": "Antal ping"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload": {
+            "description": "Laddar om pingsensorer fr\u00e5n YAML-konfigurationen.",
+            "name": "Ladda om"
+        }
+    }
+}

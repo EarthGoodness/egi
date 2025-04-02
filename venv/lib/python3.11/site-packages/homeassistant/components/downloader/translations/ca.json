@@ -1,0 +1,25 @@
+{
+    "services": {
+        "download_file": {
+            "fields": {
+                "filename": {
+                    "description": "Determina el nom del fitxer.",
+                    "name": "Nom del fitxer"
+                },
+                "overwrite": {
+                    "description": "Si s'ha de sobreescriure el fitxer o no.",
+                    "name": "Sobreescriu"
+                },
+                "subdir": {
+                    "description": "Baixa a un subdirectori.",
+                    "name": "Subdirectori"
+                },
+                "url": {
+                    "description": "URL del fitxer a descarregar.",
+                    "name": "URL"
+                }
+            },
+            "name": "Baixa fitxer"
+        }
+    }
+}

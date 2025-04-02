@@ -1,0 +1,8 @@
+{
+    "services": {
+        "reload": {
+            "description": "Laddar om smtp-aviseringstj\u00e4nster.",
+            "name": "Ladda om"
+        }
+    }
+}
