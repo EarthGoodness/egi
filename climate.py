@@ -213,7 +213,9 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
         success = await self.hass.async_add_executor_job(
             self._client.write_registers, base_addr, values
         )
+
         if success:
+            # Optimistically update state immediately to reflect in UI
             self.coordinator.data[self._dev_key].update({
                 "available": True,
                 "power": power_on,
@@ -223,11 +225,21 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
                 "wind_code": wind_code,
             })
             self.async_write_ha_state()
+
+            # Schedule a delayed refresh to verify actual device state
+            async def delayed_refresh():
+                await asyncio.sleep(2)  # slightly longer than polling interval
+                await self.coordinator.async_request_refresh()
+
+            # Schedule the delayed refresh task
+            self.hass.loop.create_task(delayed_refresh())
+
         else:
             _LOGGER.error(
                 "Failed to send control command to %s (power=%s, mode=0x%02X, temp=%s, fan=0x%02X, wind=0x%02X)",
                 self._dev_key, power_on, mode_code, set_temp, fan_code, wind_code
             )
+
 
         await asyncio.sleep(1)
         await self.coordinator.async_request_refresh()
