@@ -1,0 +1,8 @@
+scan_idus:
+  name: "Scan Indoor Units"
+  description: "Trigger a manual scan for indoor units connected to the EGI VRF gateway. Newly detected units will be added automatically."
+  fields:
+    entry_id:
+      name: "Entry ID"
+      description: "(Optional) Specific integration entry ID to scan. Leave blank to scan all entries."
+      example: "01JPZB2X3BT874XFX524FG0MAR"
