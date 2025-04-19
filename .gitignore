@@ -1,2 +1,12 @@
+# ── keep repo clean for HACS ─────────────────────────
 core/
-core/
+isolated_tests/
+venv/
+.coverage
+# VS Code helpers
+.vscode/
+# Python cache
+__pycache__/
+*.py[cod]
+# Misc
+.DS_Store
