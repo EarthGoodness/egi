@@ -1,8 +1,8 @@
 {
     "domain": "egi_vrf",
     "name": "EGI VRF Gateway",
-    "brand": "egi_vrf",
-    "version": "1.0.2",
+    "brand": "egi",
+    "version": "1.0.3",
     "config_flow": true,
     "documentation": "https://github.com/EarthGoodness/egi_vrf#readme",
     "issue_tracker": "https://github.com/EarthGoodness/egi_vrf/issues",
