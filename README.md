@@ -9,7 +9,7 @@ Seamless control of **EGI Modbus‑based HVAC adapters** directly from Home Ass
 | Adapter | Max IDUs | Protocols | Features |
 |---------|----------|-----------|----------|
 | **EGI VRF Adapter Light** | 32 | RS‑485 Modbus RTU | Power, mode, temp, fan, swing |
-| **EGI VRF Adapter Pro (AC200)** | 64 | RTU / TCP | All Light features + brand selection, restart, time‑sync, locks, humidity |
+| **EGI VRF Adapter Pro** | 64 | RTU / TCP | All Light features + brand selection, restart, time‑sync, locks, humidity |
 | **EGI HVAC Adapter Solo** | 1 | RS‑485 Modbus RTU | Single‑IDU control, restart, brand write |
 
 ---
