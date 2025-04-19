@@ -1,8 +1,9 @@
+# .github/workflows/hacs.yml
 name: HACS validation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -10,5 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: HACS validate
-        uses: hacs/action@v2
+
+      # Pick ONE of the 2 lines below ↓↓↓
+      # Stable release tag:
+      - uses: hacs/action@22.5.0
+      # ── or ── bleeding‑edge main:
+      # - uses: hacs/action@main
+
+        with:
+          category: "integration"        # required for integrations
+          # ignore: "hacs"              # optional space‑separated list of checks to skip
