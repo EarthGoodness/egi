@@ -1,11 +1,12 @@
 {
     "domain": "egi_vrf",
     "name": "EGI VRF Gateway",
+    "brand": "egi_vrf",
     "version": "1.0.1",
     "config_flow": true,
-    "documentation": "",
+    "documentation": "https://github.com/EarthGoodness/egi_vrf#readme",
     "requirements": ["pymodbus>=3.0,<4.0"],
     "iot_class": "local_polling",
-    "codeowners": [],
+    "codeowners": ["@EarthGoodness"],
     "integration_type": "device"
 }
