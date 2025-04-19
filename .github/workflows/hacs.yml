@@ -1,0 +1,14 @@
+name: HACS validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: HACS validate
+        uses: hacs/action@v2
