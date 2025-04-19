@@ -1,0 +1,8 @@
+{
+  "name": "EGI VRF",
+  "content_in_root": false,
+  "domains": ["climate"],
+  "country": "global",
+  "homeassistant": "2023.0.0",
+  "render_readme": true
+}

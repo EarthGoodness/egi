@@ -6,3 +6,30 @@ scan_idus:
       name: "Entry ID"
       description: "(Optional) Specific integration entry ID to scan. Leave blank to scan all entries."
       example: "01JPZB2X3BT874XFX524FG0MAR"
+
+set_system_time:
+  name: Set Adapter Time
+  description: Synchronize the adapter's clock with Home Assistant's system time.
+  fields:
+    entry_id:
+      required: true
+      example: abc123
+      selector:
+        text:
+
+set_brand_code:
+  name: Set Adapter Brand
+  description: Set the HVAC brand code for the adapter and trigger restart.
+  fields:
+    entry_id:
+      required: true
+      example: abc123
+      selector:
+        text:
+    brand_code:
+      required: true
+      example: 6
+      selector:
+        number:
+          min: 1
+          max: 255

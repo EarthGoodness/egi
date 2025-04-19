@@ -4,13 +4,21 @@ from . import const
 from .const import DOMAIN
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    async_add_entities([VrfGatewaySensor(coordinator, entry)])
+    data = hass.data[const.DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
+    adapter = data["adapter"]
+
+    sensors = [
+        VrfGatewaySensor(coordinator, entry, adapter),
+    ]
+
+    async_add_entities(sensors)
 
 class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, config_entry):
+    def __init__(self, coordinator, config_entry, adapter):
         super().__init__(coordinator)
         self._config_entry = config_entry
+        self._adapter = adapter
         self._attr_unique_id = f"{config_entry.entry_id}_gateway_info"
 
     @property
@@ -39,8 +47,10 @@ class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         adapter_data = self.coordinator.adapter_info or {}
+        brand_code = adapter_data.get("brand_code")
         return {
-            "brand_code": const.BRAND_NAMES.get(adapter_data.get("brand_code"), f"Unknown ({adapter_data.get('brand_code')})"),
+            "brand_code": brand_code,
+            "brand_name": self._adapter.get_brand_name(brand_code) if brand_code is not None else "Unknown",
             "supported_modes": self._decode_bitmask(
                 adapter_data.get("supported_modes", 0),
                 const.SUPPORTED_MODES

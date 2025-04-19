@@ -1,4 +1,3 @@
-"""Climate platform for EGI VRF indoor units."""
 import logging
 import asyncio
 from homeassistant.components.climate import (
@@ -37,10 +36,10 @@ SWING_MODE_MAP = {
 INV_SWING_MODE_MAP = {v: k for k, v in SWING_MODE_MAP.items()}
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up climate entities for each detected indoor unit."""
     data = hass.data[const.DOMAIN][config_entry.entry_id]
     coord = data["coordinator"]
-    entities = [EgiVrfClimate(coord, config_entry, system, index) for (system, index) in coord.devices]
+    adapter = data["adapter"]
+    entities = [EgiVrfClimate(coord, adapter, config_entry, system, index) for (system, index) in coord.devices]
     async_add_entities(entities)
 
 class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
@@ -54,9 +53,10 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
     _attr_swing_modes = ["off", "on"]
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT]
 
-    def __init__(self, coordinator, config_entry, system, index):
+    def __init__(self, coordinator, adapter, config_entry, system, index):
         super().__init__(coordinator)
         self.coordinator = coordinator
+        self.adapter = adapter
         self._dev_key = f"{system}-{index}"
         self._client = coordinator._client
         self._system = system
@@ -71,6 +71,20 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
             "model": "VRF Indoor Unit",
             "via_device": (const.DOMAIN, f"gateway_{entry_id}")
         }
+        
+    async def _refresh_idu_immediately(self):
+        """Immediately re-poll this specific IDU after a write."""
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.adapter.read_status,
+                self._client,
+                self._system,
+                self._index,
+            )
+            self.coordinator.data[self._dev_key] = data
+            self.async_write_ha_state()  # Update UI immediately
+        except Exception as e:
+            _LOGGER.error("Immediate IDU refresh failed: %s", e)
 
     @property
     def available(self):
@@ -90,7 +104,7 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
     def fan_mode(self):
         code = self.coordinator.data.get(self._dev_key, {}).get("fan_code", 0)
         return FAN_MODE_MAP.get(code, "auto")
-    
+
     @property
     def swing_mode(self):
         code = self.coordinator.data.get(self._dev_key, {}).get("wind_code", const.SWING_ON)
@@ -139,48 +153,45 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        data = self.coordinator.data.get(self._dev_key, {})
-        await self._async_send_command(
-            data.get("power", False),
-            data.get("mode_code", 0),
+        await self.hass.async_add_executor_job(
+            self.adapter.write_temperature,
+            self._client,
+            self._system,
+            self._index,
             int(temp),
-            data.get("fan_code", const.FAN_AUTO),
-            data.get("wind_code", const.SWING_OFF)
         )
+        await self._refresh_idu_immediately()
 
     async def async_set_fan_mode(self, fan_mode):
         if fan_mode not in INV_FAN_MODE_MAP:
             _LOGGER.error("Unsupported fan mode: %s", fan_mode)
             return
         code = INV_FAN_MODE_MAP[fan_mode]
-        data = self.coordinator.data.get(self._dev_key, {})
-        await self._async_send_command(
-            data.get("power", False),
-            data.get("mode_code", 0),
-            data.get("target_temp", 24),
+        await self.hass.async_add_executor_job(
+            self.adapter.write_fan_speed,
+            self._client,
+            self._system,
+            self._index,
             code,
-            data.get("wind_code", const.SWING_OFF)
         )
-        
+        await self._refresh_idu_immediately()
+
     async def async_set_swing_mode(self, swing_mode: str):
         wind_code = const.SWING_MODE_HA_TO_MODBUS.get(swing_mode, const.SWING_OFF)
-        data = self.coordinator.data.get(self._dev_key, {})
-    
-        await self._async_send_command(
-            data.get("power", False),
-            data.get("mode_code", 0),
-            data.get("target_temp", 24),
-            data.get("fan_code", const.FAN_AUTO),
-            wind_code
+        await self.hass.async_add_executor_job(
+            self.adapter.write_swing,
+            self._client,
+            self._system,
+            self._index,
+            wind_code,
         )
-    
         _LOGGER.debug(
             "Set swing mode of %s to %s (Modbus code: 0x%02X)",
             self._dev_key, swing_mode, wind_code
         )
+        await self._refresh_idu_immediately()
 
     async def async_set_hvac_mode(self, hvac_mode):
-        data = self.coordinator.data.get(self._dev_key, {})
         power_on = hvac_mode != HVACMode.OFF
         mode_code = {
             HVACMode.COOL: const.MODE_COOL,
@@ -189,20 +200,21 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
             HVACMode.FAN_ONLY: const.MODE_FAN,
         }.get(hvac_mode, const.MODE_COOL)
 
-        await self._async_send_command(
-            power_on, mode_code, data.get("target_temp", 24),
-            data.get("fan_code", const.FAN_AUTO),
-            data.get("wind_code", const.SWING_OFF)
+        await self.hass.async_add_executor_job(
+            self.adapter.write_power,
+            self._client,
+            self._system,
+            self._index,
+            power_on,
         )
 
-    async def _async_send_command(self, power_on, mode_code, set_temp, fan_code, wind_code):
-        base_addr = const.CONTROL_BASE_ADDR + (self._system * 32 + self._index) * const.CONTROL_REG_COUNT
-        values = [
-            0x01 if power_on else 0x02,
-            max(16, min(30, int(set_temp))),
-            mode_code & 0xFF,
-            (wind_code << 8) | (fan_code & 0xFF)
-        ]
-        await self.hass.async_add_executor_job(self._client.write_registers, base_addr, values)
-        await asyncio.sleep(1)
-        await self.coordinator.async_request_refresh()
+        if power_on:
+            await self.hass.async_add_executor_job(
+                self.adapter.write_mode,
+                self._client,
+                self._system,
+                self._index,
+                mode_code,
+            )
+
+        await self._refresh_idu_immediately()

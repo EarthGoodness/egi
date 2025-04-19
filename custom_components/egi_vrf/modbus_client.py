@@ -1,98 +1,131 @@
-"""Modbus client wrapper for EGI VRF Gateway."""
+"""Modbus client wrapper for EGI VRF Gateway with safe shared connection handling."""
+
 import threading
 import logging
-
 from pymodbus.client import ModbusSerialClient, ModbusTcpClient
 
 _LOGGER = logging.getLogger(__name__)
 
-class EgiModbusClient:
-    def __init__(self, port=None, host=None, baudrate=9600, parity='E', stopbits=1, bytesize=8, slave_id=1, timeout=3):
-        """Initialize the Modbus client for either serial or TCP connection."""
-        self._slave_id = slave_id
-        self._is_serial = host is None
-        self._lock = threading.Lock()
-        if self._is_serial:
-            try:
-                self._client = ModbusSerialClient(
-                    port=port, 
-                    baudrate=baudrate, 
-                    parity=parity, 
-                    stopbits=stopbits, 
-                    bytesize=bytesize,
-                    timeout=timeout
-                )
-            except Exception as e:
-                _LOGGER.error("Error initializing ModbusSerialClient: %s", e)
-                self._client = None
+# Global pool for shared Modbus clients by connection key
+_client_pool = {}
+
+def get_shared_client(connection_type, slave_id=1, **kwargs):
+    """Create or reuse a shared Modbus client based on unique connection key."""
+    key = _get_client_key(connection_type, **kwargs)
+
+    if key not in _client_pool:
+        if connection_type == "serial":
+            port = kwargs.get("port")
+            _LOGGER.info("Creating new ModbusSerialClient for port: %s", port)
+            client = ModbusSerialClient(
+                port=port,
+                baudrate=kwargs.get("baudrate", 9600),
+                parity=kwargs.get("parity", "E"),
+                stopbits=kwargs.get("stopbits", 1),
+                bytesize=kwargs.get("bytesize", 8),
+                timeout=3,
+            )
         else:
-            try:
-                self._client = ModbusTcpClient(host, port=port, timeout=timeout)
-            except Exception as e:
-                _LOGGER.error("Error initializing ModbusTcpClient: %s", e)
-                self._client = None
+            _LOGGER.info("Creating new ModbusTcpClient for host: %s", kwargs.get("host"))
+            client = ModbusTcpClient(
+                host=kwargs.get("host"),
+                port=kwargs.get("port", 502),
+                timeout=3,
+            )
+
+        connected = client.connect()
+        if connected:
+            _LOGGER.info("Modbus client connected successfully: %s", key)
+        else:
+            _LOGGER.warning("Modbus client failed to connect: %s", key)
+
+        _client_pool[key] = client
+    else:
+        _LOGGER.debug("Reusing existing Modbus client for key: %s", key)
+
+    return EgiModbusClient(_client_pool[key], slave_id=slave_id)
+
+def _get_client_key(connection_type, **kwargs):
+    """Generate unique key for each client based on port or host."""
+    if connection_type == "serial":
+        port = kwargs.get("port", "").strip()
+        return f"serial::{port}"
+    else:
+        host = kwargs.get("host", "").strip()
+        port = kwargs.get("port", 502)
+        return f"tcp::{host}:{port}"
+
+class EgiModbusClient:
+    """Wraps pymodbus client and applies slave ID + thread lock. Shared client safety."""
+
+    def __init__(self, modbus_client, slave_id=1):
+        self._client = modbus_client
+        self._slave_id = slave_id
+        self._lock = threading.Lock()
 
     def connect(self):
-        """Connect to the Modbus device. Returns True if successful or already connected."""
-        if self._client is None:
-            return False
-        connected = self._client.connect()
-        if not connected:
-            _LOGGER.error("Failed to connect to EGI VRF Modbus gateway")
-        return connected
+        """Never re-connect a shared client."""
+        _LOGGER.debug("connect() skipped — using pre-connected shared client.")
+        return True
 
     def close(self):
-        """Close the Modbus connection."""
-        try:
-            if self._client:
-                self._client.close()
-        except Exception as e:
-            _LOGGER.error("Error closing Modbus client: %s", e)
+        """Never close a shared client."""
+        _LOGGER.debug("close() skipped — shared client remains open.")
+        pass
 
     def read_holding_registers(self, address, count=1):
-        """Read holding registers. Returns list of register values or None on error."""
         if self._client is None:
             _LOGGER.error("Modbus client is not initialized")
             return None
         with self._lock:
             try:
-                result = self._client.read_holding_registers(address=address, count=count, slave=self._slave_id)
+                result = self._client.read_holding_registers(
+                    address=address,
+                    count=count,
+                    slave=self._slave_id
+                )
             except Exception as e:
                 _LOGGER.error("Modbus read_holding_registers exception: %s", e)
                 return None
-            if hasattr(result, 'isError') and result.isError():
-                _LOGGER.debug("Modbus read error for address %s count %s: %s", address, count, result)
+            if hasattr(result, "isError") and result.isError():
+                _LOGGER.warning("Modbus read error at addr=%s count=%s: %s", address, count, result)
                 return None
-            return getattr(result, 'registers', None)
-    
+            return getattr(result, "registers", None)
+
     def write_register(self, address, value):
-        """Write a single register (0x06). Returns True if successful."""
         if self._client is None:
             _LOGGER.error("Modbus client is not initialized")
             return False
         with self._lock:
             try:
-                result = self._client.write_register(address=address, value=value, slave=self._slave_id)
+                result = self._client.write_register(
+                    address=address,
+                    value=value,
+                    slave=self._slave_id
+                )
             except Exception as e:
                 _LOGGER.error("Modbus write_register exception: %s", e)
                 return False
-            if hasattr(result, 'isError') and result.isError():
-                _LOGGER.error("Modbus write error for address %s: %s", address, result)
+            if hasattr(result, "isError") and result.isError():
+                _LOGGER.warning("Modbus write error at addr=%s: %s", address, result)
                 return False
             return True
-    
+
     def write_registers(self, address, values):
-        """Write multiple registers (0x10). Returns True if successful."""
         if self._client is None:
             _LOGGER.error("Modbus client is not initialized")
             return False
         with self._lock:
             try:
-                result = self._client.write_registers(address=address, values=values, slave=self._slave_id)
+                result = self._client.write_registers(
+                    address=address,
+                    values=values,
+                    slave=self._slave_id
+                )
             except Exception as e:
                 _LOGGER.error("Modbus write_registers exception: %s", e)
                 return False
-            if hasattr(result, 'isError') and result.isError():
-                _LOGGER.error("Modbus write multiple error at address %s: %s", address, result)
+            if hasattr(result, "isError") and result.isError():
+                _LOGGER.warning("Modbus write multiple error at addr=%s: %s", address, result)
                 return False
             return True

@@ -1,25 +1,25 @@
 """Config flow for EGI VRF integration."""
 import logging
+import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-import voluptuous as vol
-
-from . import const, modbus_client
-from .options_flow import EgiVrfOptionsFlowHandler  # <-- Added this import
+from . import const
+from .modbus_client import EgiModbusClient, get_shared_client
+from .options_flow import EgiVrfOptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
 class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
-    """Handle a config flow for EGI VRF Modbus integration."""
     VERSION = 1
 
     def __init__(self):
         self._connection_type = None
+        self._adapter_type = None
 
     async def async_step_user(self, user_input=None):
-        """First step: choose connection type."""
         errors = {}
         if user_input is not None:
+            self._adapter_type = user_input.get("adapter_type")
             self._connection_type = user_input.get("connection_type")
             if self._connection_type == "serial":
                 return await self.async_step_serial()
@@ -27,67 +27,77 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
                 return await self.async_step_tcp()
             else:
                 errors["base"] = "invalid_connection_type"
+
         data_schema = vol.Schema({
-            vol.Required("connection_type", default="serial"): vol.In(["serial", "tcp"])
+            vol.Required("adapter_type", default="light"): vol.In(["solo", "light", "pro"]),
+            vol.Required("connection_type", default="serial"): vol.In(["serial", "tcp"]),
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def async_step_serial(self, user_input=None):
-        """Handle the serial connection configuration step."""
         errors = {}
         if user_input is not None:
-            user_input["connection_type"] = "serial"
-            error = await self._async_test_connection(user_input)
+            full_input = {
+                "connection_type": "serial",
+                "adapter_type": self._adapter_type,
+                **user_input,
+            }
+            error = await self._async_test_connection(full_input)
             if error is None:
-                return self.async_create_entry(title=f"EGI VRF (Serial {user_input.get('port')})", data=user_input)
+                return self.async_create_entry(
+                    title=f"EGI VRF ({self._adapter_type} / Serial {user_input.get('port')})",
+                    data=full_input,
+                )
             else:
                 errors["base"] = error
+
         data_schema = vol.Schema({
             vol.Required("port", default=const.DEFAULT_PORT): str,
             vol.Optional("baudrate", default=const.DEFAULT_BAUDRATE): int,
             vol.Optional("parity", default=const.DEFAULT_PARITY): vol.In(["N", "E", "O"]),
-            vol.Optional("stopbits", default=const.DEFAULT_STOPBITS): vol.All(int, vol.In([1, 2])),
-            vol.Optional("bytesize", default=const.DEFAULT_BYTESIZE): vol.All(int, vol.In([7, 8])),
-            vol.Optional("slave_id", default=const.DEFAULT_SLAVE_ID): vol.All(int, vol.Range(min=1, max=247))
+            vol.Optional("stopbits", default=const.DEFAULT_STOPBITS): vol.In([1, 2]),
+            vol.Optional("bytesize", default=const.DEFAULT_BYTESIZE): vol.In([7, 8]),
+            vol.Optional("slave_id", default=const.DEFAULT_SLAVE_ID): int,
         })
         return self.async_show_form(step_id="serial", data_schema=data_schema, errors=errors)
 
     async def async_step_tcp(self, user_input=None):
-        """Handle the TCP connection configuration step."""
         errors = {}
         if user_input is not None:
-            user_input["connection_type"] = "tcp"
-            error = await self._async_test_connection(user_input)
+            full_input = {
+                "connection_type": "tcp",
+                "adapter_type": self._adapter_type,
+                **user_input,
+            }
+            error = await self._async_test_connection(full_input)
             if error is None:
-                return self.async_create_entry(title=f"EGI VRF (TCP {user_input.get('host')}:{user_input.get('port')})", data=user_input)
+                return self.async_create_entry(
+                    title=f"EGI VRF ({self._adapter_type} / TCP {user_input.get('host')}:{user_input.get('port')})",
+                    data=full_input,
+                )
             else:
                 errors["base"] = error
+
         data_schema = vol.Schema({
             vol.Required("host"): str,
             vol.Required("port", default=502): int,
-            vol.Optional("slave_id", default=const.DEFAULT_SLAVE_ID): vol.All(int, vol.Range(min=1, max=247))
+            vol.Optional("slave_id", default=const.DEFAULT_SLAVE_ID): int,
         })
         return self.async_show_form(step_id="tcp", data_schema=data_schema, errors=errors)
 
     async def _async_test_connection(self, config):
-        """Test the modbus connection with given config. Returns error string or None if success."""
         def _try_connect():
             try:
-                if config.get("connection_type") == "serial":
-                    client = modbus_client.EgiModbusClient(
-                        port=config.get("port"),
-                        baudrate=config.get("baudrate", const.DEFAULT_BAUDRATE),
-                        parity=config.get("parity", const.DEFAULT_PARITY),
-                        stopbits=config.get("stopbits", const.DEFAULT_STOPBITS),
-                        bytesize=config.get("bytesize", const.DEFAULT_BYTESIZE),
-                        slave_id=config.get("slave_id", const.DEFAULT_SLAVE_ID)
-                    )
-                else:
-                    client = modbus_client.EgiModbusClient(
-                        host=config.get("host"),
-                        port=config.get("port", 502),
-                        slave_id=config.get("slave_id", const.DEFAULT_SLAVE_ID)
-                    )
+                client = get_shared_client(
+                    connection_type=config.get("connection_type", "serial"),
+                    slave_id=config.get("slave_id", 1),
+                    port=config.get("port"),
+                    baudrate=config.get("baudrate"),
+                    parity=config.get("parity"),
+                    stopbits=config.get("stopbits"),
+                    bytesize=config.get("bytesize"),
+                    host=config.get("host"),
+                )
                 if not client.connect():
                     return "cannot_connect"
                 result = client.read_holding_registers(0, 1)
@@ -98,10 +108,10 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
                 _LOGGER.error("Connection test failed: %s", e)
                 return "cannot_connect"
             return None
+
         return await self.hass.async_add_executor_job(_try_connect)
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return EgiVrfOptionsFlowHandler()
-
+        return EgiVrfOptionsFlowHandler(config_entry)
