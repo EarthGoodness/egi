@@ -10,3 +10,4 @@ __pycache__/
 *.py[cod]
 # Misc
 .DS_Store
+tests/
