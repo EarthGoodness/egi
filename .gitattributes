@@ -1,0 +1,3 @@
+# Exclude meta folders & files from git-archive (used by GitHub releases)
+.github/         export-ignore
+.gitignore       export-ignore
