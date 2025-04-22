@@ -1,7 +1,7 @@
 {
     "domain": "egi",
     "name": "EGI Adapters for HVAC & VRF Control",
-    "brand": "EGI",
+    "brand": "egi",
     "config_flow": true,
     "codeowners": ["@EarthGoodness"],
     "documentation": "https://github.com/EarthGoodness/egi#readme",
