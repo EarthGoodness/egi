@@ -45,6 +45,14 @@ jobs:
           filename: egi-${{ steps.read_property.outputs.value }}.zip
           directory: custom_components/
           type: zip
+          
+      - name: Verify zip file exists
+        if: ${{ steps.read_property.outputs.value != steps.get_latest_release.outputs.name }}
+        run: |
+          if [ ! -f "custom_components/egi-${{ steps.read_property.outputs.value }}.zip" ]; then
+              echo "Error: Zip file not found!"
+              exit 1
+          fi
 
       - name: Create release
         if: ${{ steps.read_property.outputs.value != steps.get_latest_release.outputs.name }}
