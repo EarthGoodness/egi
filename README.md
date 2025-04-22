@@ -6,7 +6,7 @@
 [![Validate with HACS Action](https://github.com/EarthGoodness/egi/actions/workflows/validate.yml/badge.svg)](https://github.com/EarthGoodness/egi/actions/workflows/validate.yml)
 [![Validate with hassfest Action](https://github.com/EarthGoodness/egi/actions/workflows/hassfest.yml/badge.svg)](https://github.com/EarthGoodness/egi/actions/workflows/hassfest.yml)
 
-Seamless control of **EGI Modbus‑based HVAC adapters** directly from Home Assistant.
+Seamless control of **EGI HVAC & VRF adapters** directly from Home Assistant.
 
 | Adapter | Max IDUs | Protocols | Features |
 |---------|----------|-----------|----------|
@@ -36,7 +36,7 @@ Seamless control of **EGI Modbus‑based HVAC adapters** directly from Home Ass
 2. **Custom Repositories → +** and enter  
    `https://github.com/EarthGoodness/egi`  
    Category = **Integration**
-3. Search for **“EGI VRF Gateway”** and click **Install**
+3. Search for **“EGI”** and click **Install**
 4. Restart Home Assistant when prompted.
 
 ---
