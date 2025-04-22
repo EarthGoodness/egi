@@ -1,8 +1,8 @@
 # EGI VRF & HVAC Integration for Home Assistant
 
 ![HACS badge](https://img.shields.io/badge/HACS-Default-orange.svg)
-![GitHub release](https://img.shields.io/github/v/release/EarthGoodness/egi_vrf)
-![GitHub stars](https://img.shields.io/github/stars/EarthGoodness/egi_vrf?style=social)
+![GitHub release](https://img.shields.io/github/v/release/EarthGoodness/egi)
+![GitHub stars](https://img.shields.io/github/stars/EarthGoodness/egi?style=social)
 
 Seamless control of **EGI Modbus‑based HVAC adapters** directly from Home Assistant.
 
