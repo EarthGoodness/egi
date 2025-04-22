@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write  # Grants write permissions to GITHUB_TOKEN
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,10 +27,10 @@ jobs:
         uses: joutvhu/get-release@v1
         with:
           latest: true
-          prerelease: false  # Set to true if you want to include pre-releases
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
       - name: Check version
         run: |
           echo Uploaded version: ${{ steps.read_property.outputs.value }}
@@ -38,22 +41,14 @@ jobs:
         run: |
           echo Skipping release because version did not change!
 
-      - name: Create Git Tag
-        if: ${{ steps.read_property.outputs.value != steps.get_latest_release.outputs.name }}
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git tag ${{ steps.read_property.outputs.value }}
-          git push origin ${{ steps.read_property.outputs.value }}
-        
       - name: Create zip asset
         if: ${{ steps.read_property.outputs.value != steps.get_latest_release.outputs.name }}
         uses: TheDoctor0/zip-release@0.4.2
         with:
           filename: egi-${{ steps.read_property.outputs.value }}.zip
-          directory: custom_components/egi
+          directory: custom_components/
           type: zip
-        
+
       - name: Verify zip file exists
         if: ${{ steps.read_property.outputs.value != steps.get_latest_release.outputs.name }}
         run: |
@@ -62,15 +57,13 @@ jobs:
               exit 1
           fi
 
-      - name: Create Release
+      - name: Create release
         if: ${{ steps.read_property.outputs.value != steps.get_latest_release.outputs.name }}
-        uses: actions/create-release@v1
+        uses: meeDamian/github-release@v2.0.3
         with:
-          tag_name: ${{ steps.read_property.outputs.value }}
-          release_name: ${{ steps.read_property.outputs.value }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.read_property.outputs.value }}
+          name: ${{ steps.read_property.outputs.value }}
           body: ${{ github.event.head_commit.message }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+          files: custom_components/egi-${{ steps.read_property.outputs.value }}.zip
+          gzip: false
