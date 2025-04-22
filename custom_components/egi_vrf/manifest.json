@@ -1,5 +1,5 @@
 {
-    "domain": "egi_vrf",
+    "domain": "egi",
     "name": "EGI VRF Gateway",
     "brand": "egi",
     "version": "1.0.3",
