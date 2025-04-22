@@ -9,7 +9,7 @@ class EgiVrfCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="egi_vrf_coordinator",
+            name="egi_coordinator",
             update_interval=update_interval
         )
         self._client = modbus_client

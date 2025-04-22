@@ -1,5 +1,5 @@
 """Constants for EGI VRF integration."""
-DOMAIN = "egi_vrf"
+DOMAIN = "egi"
 
 # Default serial connection parameters
 DEFAULT_PORT = "/dev/ttyUSB0"

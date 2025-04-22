@@ -50,8 +50,8 @@ class EgiVrfOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     async def _execute_adapter_command(self, command):
         """Call adapter restart or factory reset if supported."""
         entry_id = self.config_entry.entry_id
-        adapter = self.hass.data.get("egi_vrf", {}).get(entry_id, {}).get("adapter")
-        client = self.hass.data.get("egi_vrf", {}).get(entry_id, {}).get("client")
+        adapter = self.hass.data.get("egi", {}).get(entry_id, {}).get("adapter")
+        client = self.hass.data.get("egi", {}).get(entry_id, {}).get("client")
 
         if adapter and hasattr(adapter, command):
             _LOGGER.debug("Calling adapter.%s() for entry %s", command, entry_id)
