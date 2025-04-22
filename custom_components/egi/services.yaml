@@ -12,8 +12,6 @@ set_system_time:
   description: Synchronize the adapter's clock with Home Assistant's system time.
   fields:
     entry_id:
-      name: "Entry ID"
-      description: "The unique identifier for the integration entry."
       required: true
       example: abc123
       selector:
@@ -24,15 +22,11 @@ set_brand_code:
   description: Set the HVAC brand code for the adapter and trigger restart.
   fields:
     entry_id:
-      name: "Entry ID"
-      description: "The unique identifier for the integration entry."
       required: true
       example: abc123
       selector:
         text:
     brand_code:
-      name: "Brand Code"
-      description: "The HVAC brand code to set."
       required: true
       example: 6
       selector:

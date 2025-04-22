@@ -32,17 +32,43 @@
       "already_configured": "This adapter is already configured"
     }
   },
-    "options": {
-      "step": {
-        "init": {
-          "title": "EGI Adapter Options",
-          "description": "Adapter: {adapter_type} using {connection_type} connection.",
-          "data": {
-            "poll_interval": "Polling interval (seconds)",
-            "trigger_restart": "Restart adapter now",
-            "trigger_factory_reset": "Reset adapter to factory defaults"
-          }
+  "options": {
+    "step": {
+      "init": {
+        "title": "EGI Adapter Options",
+        "description": "Adapter: {adapter_type} using {connection_type} connection.",
+        "data": {
+          "poll_interval": "Polling interval (seconds)",
+          "trigger_restart": "Restart adapter now",
+          "trigger_factory_reset": "Reset adapter to factory defaults"
         }
       }
     }
+  },
+  "services": {
+    "set_system_time": {
+      "name": "Set Adapter System Time",
+      "description": "Set the date and time on the EGI adapter.",
+      "fields": {
+        "entry_id": {
+          "name": "Config Entry ID",
+          "description": "The ID of the configuration entry for the adapter."
+        }
+      }
+    },
+    "set_brand_code": {
+      "name": "Set Adapter Brand Code",
+      "description": "Set the brand code on the EGI adapter and trigger restart.",
+      "fields": {
+        "entry_id": {
+          "name": "Config Entry ID",
+          "description": "The ID of the configuration entry for the adapter."
+        },
+        "brand_code": {
+          "name": "Brand Code",
+          "description": "Brand code to set (numeric)."
+        }
+      }
+    }
+  }
 }
