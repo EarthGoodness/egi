@@ -3,6 +3,8 @@
 ![HACS badge](https://img.shields.io/badge/HACS-Default-orange.svg)
 ![GitHub release](https://img.shields.io/github/v/release/EarthGoodness/egi)
 ![GitHub stars](https://img.shields.io/github/stars/EarthGoodness/egi?style=social)
+[![Validate](https://github.com/EarthGoodness/egi/actions/workflows/validate.yml/badge.svg)](https://github.com/EarthGoodness/egi/actions/workflows/validate.yml)
+[![Validate with hassfest](https://github.com/EarthGoodness/egi/actions/workflows/hassfest.yml/badge.svg)](https://github.com/EarthGoodness/egi/actions/workflows/hassfest.yml)
 
 Seamless control of **EGI Modbus‑based HVAC adapters** directly from Home Assistant.
 
