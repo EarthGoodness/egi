@@ -21,4 +21,4 @@ jobs:
         with:
           category: "integration"        # required for integrations
           # ignore: "hacs"              # optional space‑separated list of checks to skip
-          ignore: "brands"
+          # ignore: "brands"
