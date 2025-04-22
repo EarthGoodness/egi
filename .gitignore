@@ -11,4 +11,3 @@ __pycache__/
 # Misc
 .DS_Store
 tests/
-script/
