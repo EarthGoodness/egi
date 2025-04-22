@@ -1,9 +1,9 @@
 {
-  "title": "EGI VRF Modbus RTU",
+  "title": "EGI Adapter for HVAC & VRF Control",
   "config": {
     "step": {
       "user": {
-        "title": "EGI VRF Connection",
+        "title": "EGI Adapter Connection",
         "description": "Connect to an EGI VRF adapter.",
         "data": {
           "connection_type": "Connection type",
@@ -35,7 +35,7 @@
     "options": {
       "step": {
         "init": {
-          "title": "EGI VRF Options",
+          "title": "EGI Adapter Options",
           "description": "Adapter: {adapter_type} using {connection_type} connection.",
           "data": {
             "poll_interval": "Polling interval (seconds)",

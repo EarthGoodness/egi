@@ -1,5 +1,5 @@
 {
-  "name": "EGI VRF",
+  "name": "EGI HVAC & VRF Control",
   "content_in_root": false,
   "country": "ALL",
   "homeassistant": "2025.0.0",
