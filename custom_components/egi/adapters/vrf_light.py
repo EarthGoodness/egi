@@ -46,7 +46,7 @@ class AdapterVrfLight(BaseAdapter):
     def __init__(self):
         super().__init__()
         self.name = "EGI VRF Adapter Light"
-        self.max_idus = 32
+        self.max_idus = 256
         self.supports_brand_write = False
 
     def get_brand_name(self, code):
@@ -71,7 +71,7 @@ class AdapterVrfLight(BaseAdapter):
 
     def scan_devices(self, client):
         found = []
-        for system in range(4):
+        for system in range(8):
             for index in range(32):
                 addr = (system * 32 + index) * STATUS_REG_COUNT
                 result = client.read_holding_registers(addr, STATUS_REG_COUNT)
