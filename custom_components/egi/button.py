@@ -1,12 +1,11 @@
+# button.py
 """Button platform for EGI VRF integration."""
 import logging
 from homeassistant.components.button import ButtonEntity
-from .adapters import get_adapter
 
 from . import const
 
 _LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[const.DOMAIN][config_entry.entry_id]
@@ -28,7 +27,6 @@ class EgiVrfRescanButton(ButtonEntity):
     """Rescan Indoor Units button entity."""
 
     def __init__(self, coordinator, config_entry, adapter):
-        """Initialize the rescan button."""
         self._coordinator = coordinator
         self._adapter = adapter
         self._entry = config_entry
@@ -67,7 +65,6 @@ class AdapterRestartButton(ButtonEntity):
     """Restart Adapter button entity."""
 
     def __init__(self, coordinator, config_entry, adapter):
-        """Initialize the restart button."""
         self._coordinator = coordinator
         self._adapter = adapter
         self._client = coordinator._client
@@ -85,7 +82,7 @@ class AdapterRestartButton(ButtonEntity):
         _LOGGER.info("Sending adapter restart command...")
         result = await self.hass.async_add_executor_job(
             self._adapter.restart_device,
-            self._client
+            self._client,
         )
         if result:
             _LOGGER.info("Adapter restart command succeeded.")
@@ -97,7 +94,6 @@ class AdapterFactoryResetButton(ButtonEntity):
     """Factory Reset Adapter button entity."""
 
     def __init__(self, coordinator, config_entry, adapter):
-        """Initialize the factory reset button."""
         self._coordinator = coordinator
         self._adapter = adapter
         self._client = coordinator._client
@@ -115,7 +111,7 @@ class AdapterFactoryResetButton(ButtonEntity):
         _LOGGER.info("Sending factory reset command to adapter...")
         result = await self.hass.async_add_executor_job(
             self._adapter.factory_reset,
-            self._client
+            self._client,
         )
         if result:
             _LOGGER.info("Factory reset command succeeded.")

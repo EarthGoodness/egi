@@ -12,17 +12,20 @@ from .coordinator import EgiVrfCoordinator
 from .modbus_client import get_shared_client, EgiModbusClient
 from .adapters import get_adapter
 
-from . import sensor
-from . import button
-from . import select
-
-from . import config_flow
+# ─── PRELOAD PLATFORMS & CONFIG FLOW ────────────────────────────────────────────
+from . import sensor       # noqa: F401
+from . import button       # noqa: F401
+from . import select       # noqa: F401
+from . import config_flow  # noqa: F401
+# ────────────────────────────────────────────────────────────────────────────────
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "button", "select"]  # must match the modules you pre-import
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up an EGI VRF config entry."""
     hass.data.setdefault(const.DOMAIN, {})
 
     adapter_type = entry.data.get("adapter_type", "light")
@@ -58,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     update_interval = timedelta(seconds=entry.options.get("poll_interval", 2))
-
     coordinator = EgiVrfCoordinator(hass, client, adapter, indoor_units, update_interval)
 
     try:
@@ -73,61 +75,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "adapter": adapter,
     }
 
-    # Register service: set_system_time
+    # --- Register services ---
     async def async_handle_set_time(call):
-        entry_id = call.data.get("entry_id")
-        adapter = hass.data[const.DOMAIN].get(entry_id, {}).get("adapter")
-        client = hass.data[const.DOMAIN].get(entry_id, {}).get("client")
-        if adapter and client and hasattr(adapter, "write_system_time"):
-            await hass.async_add_executor_job(adapter.write_system_time, client)
-            _LOGGER.info("System time set for adapter: %s", entry_id)
+        eid = call.data.get("entry_id")
+        ad = hass.data[const.DOMAIN].get(eid, {}).get("adapter")
+        cli = hass.data[const.DOMAIN].get(eid, {}).get("client")
+        if ad and cli and hasattr(ad, "write_system_time"):
+            await hass.async_add_executor_job(ad.write_system_time, cli)
+            _LOGGER.info("System time set for adapter: %s", eid)
         else:
-            _LOGGER.warning("Adapter or client not found for entry_id: %s", entry_id)
+            _LOGGER.warning("Adapter or client not found for entry_id: %s", eid)
 
-    hass.services.async_register(
-        const.DOMAIN, "set_system_time", async_handle_set_time
-    )
+    hass.services.async_register(const.DOMAIN, "set_system_time", async_handle_set_time)
 
-    # Register service: set_brand_code
     async def async_handle_set_brand(call):
-        entry_id = call.data.get("entry_id")
-        brand_code = call.data.get("brand_code")
-        adapter = hass.data[const.DOMAIN].get(entry_id, {}).get("adapter")
-        client = hass.data[const.DOMAIN].get(entry_id, {}).get("client")
-        if adapter and client and hasattr(adapter, "write_brand_code"):
-            await hass.async_add_executor_job(adapter.write_brand_code, client, brand_code)
-            _LOGGER.info("Brand code %s written to adapter %s", brand_code, entry_id)
+        eid = call.data.get("entry_id")
+        bc = call.data.get("brand_code")
+        ad = hass.data[const.DOMAIN].get(eid, {}).get("adapter")
+        cli = hass.data[const.DOMAIN].get(eid, {}).get("client")
+        if ad and cli and hasattr(ad, "write_brand_code"):
+            await hass.async_add_executor_job(ad.write_brand_code, cli, bc)
+            _LOGGER.info("Brand code %s written to adapter %s", bc, eid)
         else:
-            _LOGGER.warning("Adapter or client not found for entry_id: %s", entry_id)
+            _LOGGER.warning("Adapter or client not found for entry_id: %s", eid)
 
-    hass.services.async_register(
-        const.DOMAIN, "set_brand_code", async_handle_set_brand
-    )
+    hass.services.async_register(const.DOMAIN, "set_brand_code", async_handle_set_brand)
 
-    # Register rescan service
     async def async_handle_rescan_service(call):
-        entry_id = call.data.get("entry_id")
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if not entry:
-            _LOGGER.error("Invalid entry_id provided for rescan: %s", entry_id)
+        eid = call.data.get("entry_id")
+        entry_obj = hass.config_entries.async_get_entry(eid)
+        if not entry_obj:
+            _LOGGER.error("Invalid entry_id provided for rescan: %s", eid)
             return
-        coordinator = hass.data[const.DOMAIN][entry.entry_id]["coordinator"]
-        await coordinator.async_request_refresh()
-        _LOGGER.info("Rescan completed for entry %s", entry.title)
+        coord = hass.data[const.DOMAIN][eid]["coordinator"]
+        await coord.async_request_refresh()
+        _LOGGER.info("Rescan completed for entry %s", entry_obj.title)
 
     if not hass.services.has_service(const.DOMAIN, "scan_idus"):
-        hass.services.async_register(
-            const.DOMAIN,
-            "scan_idus",
-            async_handle_rescan_service,
-        )
+        hass.services.async_register(const.DOMAIN, "scan_idus", async_handle_rescan_service)
 
-    # Register device in registry
+    # --- Register device in Home Assistant registry ---
     device_registry = async_get_device_registry(hass)
-    gateway_id = f"gateway_{entry.entry_id}"
+    gw_id = f"gateway_{entry.entry_id}"
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(const.DOMAIN, gateway_id)},
+        identifiers={(const.DOMAIN, gw_id)},
         name=f"{adapter.name} ({coordinator.gateway_brand_name})",
         manufacturer="EGI",
         model=f"{adapter.name} Adapter",
@@ -137,10 +129,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         device_registry.async_update_device(
             device.id,
             sw_version="1.0",
-            configuration_url=None,
-            name_by_user=f"{coordinator.gateway_brand_name} VRF Gateway"
+            name_by_user=f"{coordinator.gateway_brand_name} VRF Gateway",
         )
 
+    # --- Load platforms ---
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
@@ -165,13 +157,14 @@ def _init_modbus_client(entry):
         return None
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         data = hass.data[const.DOMAIN].pop(entry.entry_id, {})
-        coordinator = data.get("coordinator")
-        if coordinator:
-            coordinator.update_interval = None
+        coord = data.get("coordinator")
+        if coord:
+            coord.update_interval = None
 
         if not hass.data[const.DOMAIN]:
             hass.services.async_remove(const.DOMAIN, "scan_idus")
@@ -183,11 +176,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 @callback
 def async_get_options_flow(config_entry):
+    """Get options flow handler."""
     from .options_flow import EgiVrfOptionsFlowHandler
     return EgiVrfOptionsFlowHandler(config_entry)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.info("Configuration updated, reloading EGI VRF integration")
     await hass.config_entries.async_reload(entry.entry_id)
-
