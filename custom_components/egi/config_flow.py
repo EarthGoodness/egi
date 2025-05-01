@@ -1,15 +1,19 @@
-"""Config flow for EGI VRF integration."""
+'''Config flow for EGI VRF integration.'''
 import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
+
 from . import const
-from .modbus_client import EgiModbusClient, get_shared_client
+from .modbus_client import EgiModbusClient, get_shared_client, get_adapter
 from .options_flow import EgiVrfOptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
+    """Handle a config flow for EGI VRF integration."""
+
     VERSION = 1
 
     def __init__(self):
@@ -17,16 +21,16 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
         self._adapter_type = None
 
     async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
         errors = {}
         if user_input is not None:
             self._adapter_type = user_input.get("adapter_type")
             self._connection_type = user_input.get("connection_type")
             if self._connection_type == "serial":
                 return await self.async_step_serial()
-            elif self._connection_type == "tcp":
+            if self._connection_type == "tcp":
                 return await self.async_step_tcp()
-            else:
-                errors["base"] = "invalid_connection_type"
+            errors["base"] = "invalid_connection_type"
 
         data_schema = vol.Schema({
             vol.Required("adapter_type", default="light"): vol.In(["solo", "light", "pro"]),
@@ -35,6 +39,7 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def async_step_serial(self, user_input=None):
+        """Handle serial connection setup."""
         errors = {}
         if user_input is not None:
             full_input = {
@@ -44,12 +49,13 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
             }
             error = await self._async_test_connection(full_input)
             if error is None:
+                adapter = get_adapter(self._adapter_type)
+                port = full_input["port"]
                 return self.async_create_entry(
-                    title=f"EGI VRF ({self._adapter_type} / Serial {user_input.get('port')})",
+                    title=f"{adapter.name} (Serial {port})",
                     data=full_input,
                 )
-            else:
-                errors["base"] = error
+            errors["base"] = error
 
         data_schema = vol.Schema({
             vol.Required("port", default=const.DEFAULT_PORT): str,
@@ -62,6 +68,7 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
         return self.async_show_form(step_id="serial", data_schema=data_schema, errors=errors)
 
     async def async_step_tcp(self, user_input=None):
+        """Handle TCP connection setup."""
         errors = {}
         if user_input is not None:
             full_input = {
@@ -71,12 +78,14 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
             }
             error = await self._async_test_connection(full_input)
             if error is None:
+                adapter = get_adapter(self._adapter_type)
+                host = full_input["host"]
+                port = full_input["port"]
                 return self.async_create_entry(
-                    title=f"EGI VRF ({self._adapter_type} / TCP {user_input.get('host')}:{user_input.get('port')})",
+                    title=f"{adapter.name} (TCP {host}:{port})",
                     data=full_input,
                 )
-            else:
-                errors["base"] = error
+            errors["base"] = error
 
         data_schema = vol.Schema({
             vol.Required("host"): str,
@@ -86,6 +95,7 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
         return self.async_show_form(step_id="tcp", data_schema=data_schema, errors=errors)
 
     async def _async_test_connection(self, config):
+        """Test if we can connect with provided credentials."""
         def _try_connect():
             try:
                 client = get_shared_client(
@@ -114,4 +124,5 @@ class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
         return EgiVrfOptionsFlowHandler(config_entry)

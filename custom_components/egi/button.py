@@ -34,7 +34,7 @@ class EgiVrfRescanButton(ButtonEntity):
         self._attr_device_info = {
             "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
             "manufacturer": "EGI",
-            "model": "VRF Gateway",
+            "model": f"{adapter.name} - {self.coordinator.gateway_brand_name}",
         }
 
     async def async_press(self):
@@ -66,7 +66,7 @@ class AdapterRestartButton(ButtonEntity):
         self._attr_device_info = {
             "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
             "manufacturer": "EGI",
-            "model": "VRF Gateway",
+            "model": f"{adapter.name} - {self.coordinator.gateway_brand_name}",
         }
 
     async def async_press(self):
@@ -91,7 +91,7 @@ class AdapterFactoryResetButton(ButtonEntity):
         self._attr_device_info = {
             "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
             "manufacturer": "EGI",
-            "model": "VRF Gateway",
+            "model": f"{adapter.name} - {self.coordinator.gateway_brand_name}",
         }
 
     async def async_press(self):

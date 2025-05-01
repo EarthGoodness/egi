@@ -1,7 +1,10 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from .modbus_client import get_adapter
 from . import const
 from .const import DOMAIN
+
+adapter = get_adapter(self.coordinator.adapter_type)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[const.DOMAIN][entry.entry_id]
@@ -40,7 +43,7 @@ class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, f"gateway_{entry_id}")},
             "name": f"{self.coordinator.gateway_brand_name} VRF Gateway",
             "manufacturer": "EGI",
-            "model": "VRF Gateway light",
+            "model": f"{adapter.name} - {self.coordinator.gateway_brand_name}",
             "sw_version": "1.0",
         }
 
