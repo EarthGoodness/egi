@@ -10,41 +10,29 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up sensors based on adapter type."""
+    """Set up sensors based on adapter capabilities."""
     data = hass.data[const.DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
     adapter = data["adapter"]
 
     entities = []
 
-    if adapter.adapter_type == "solo":
-        # Solo adapter: expose registers D0000–D0006 and D2000–D2003
-        solo_registers = [
-            (0, "Power Status"),
-            (1, "Mode Setting"),
-            (2, "Temperature Setting"),
-            (3, "Fan Speed Setting"),
-            (4, "Louver Direction"),
-            (5, "Fault Code"),
-            (6, "Room Temperature"),
-            (2000, "AC Brand"),
-            (2001, "Outdoor Unit Address"),
-            (2002, "Indoor Unit Address"),
-            (2003, "Online Status"),
-        ]
-        for reg, desc in solo_registers:
+    # Use adapter.registers if provided (e.g., SoloAdapter)
+    registers = getattr(adapter, "registers", None)
+    if registers:
+        for register, description in registers:
             entities.append(
-                SoloRegisterSensor(coordinator, entry, adapter, reg, desc)
+                RegisterSensor(coordinator, entry, adapter, register, description)
             )
     else:
-        # VRF Light/Pro adapter: gateway-level sensor
+        # Fallback for gateway-level sensors (Light/Pro)
         entities.append(VrfGatewaySensor(coordinator, entry, adapter))
 
     async_add_entities(entities)
 
 
-class SoloRegisterSensor(CoordinatorEntity, SensorEntity):
-    """Sensor for a single register on Solo adapter."""
+class RegisterSensor(CoordinatorEntity, SensorEntity):
+    """Generic sensor for a single register."""
 
     def __init__(self, coordinator, entry, adapter, register, description):
         super().__init__(coordinator)
@@ -52,31 +40,30 @@ class SoloRegisterSensor(CoordinatorEntity, SensorEntity):
         self._adapter = adapter
         self._register = register
         self._attr_name = f"{adapter.name} {description}"
-        self._attr_unique_id = f"{entry.entry_id}_solo_{register}"
+        self._attr_unique_id = f"{entry.entry_id}_reg_{register}"
         entry_id = entry.entry_id
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"solo_{entry_id}")},
+            "identifiers": {(DOMAIN, f"adapter_{entry_id}")},
             "manufacturer": "EGI",
             "model": f"{adapter.name}",
         }
 
     @property
     def native_value(self):
-        """Return current value for this register."""
-        data = self.coordinator.data or {}
+        """Return current value for this register from coordinator."""
+        data = getattr(self.coordinator, "data", {}) or {}
         return data.get(self._register)
 
     async def async_update(self):
         """Fetch register value directly from adapter."""
         try:
             result = await self.hass.async_add_executor_job(
-                lambda: self._adapter.read_register(self._register)
+                self._adapter.read_register,
+                self._register,
             )
             self._state = result
         except Exception as err:
-            _LOGGER.error(
-                "Error reading Solo register %s: %s", self._register, err
-            )
+            _LOGGER.error("Error reading register %s: %s", self._register, err)
         self.async_write_ha_state()
 
 
@@ -114,8 +101,8 @@ class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        adapter_data = self._coordinator.adapter_info or {}
-        brand_code = adapter_data.get("brand_code")
+        data = getattr(self._coordinator, "adapter_info", {}) or {}
+        brand_code = data.get("brand_code")
         return {
             "brand_code": brand_code,
             "brand_name": (
@@ -123,21 +110,18 @@ class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
                 if brand_code is not None
                 else "Unknown"
             ),
-            "supported_modes": self._decode_bitmask(
-                adapter_data.get("supported_modes", 0),
-                const.SUPPORTED_MODES,
-            ),
-            "supported_fan_speeds": self._decode_bitmask(
-                adapter_data.get("supported_fan", 0),
-                const.SUPPORTED_FAN_SPEEDS,
-            ),
+            "supported_modes": [
+                name for bit, name in const.SUPPORTED_MODES.items()
+                if data.get("supported_modes", 0) & bit
+            ],
+            "supported_fan_speeds": [
+                name for bit, name in const.SUPPORTED_FAN_SPEEDS.items()
+                if data.get("supported_fan", 0) & bit
+            ],
             "temperature_limits": const.decode_temperature_limits(
-                adapter_data.get("temp_limits", 0)
+                data.get("temp_limits", 0)
             ),
             "special_info": const.decode_special_info(
-                adapter_data.get("special_info", 0)
+                data.get("special_info", 0)
             ),
         }
-
-    def _decode_bitmask(self, raw_value, mapping):
-        return [name for bit, name in mapping.items() if raw_value & bit]
