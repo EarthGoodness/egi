@@ -12,6 +12,12 @@ from .coordinator import EgiVrfCoordinator
 from .modbus_client import get_shared_client, EgiModbusClient
 from .adapters import get_adapter
 
+from . import sensor
+from . import button
+from . import select
+
+from . import config_flow
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "button", "select"]  # must match the modules you pre-import
