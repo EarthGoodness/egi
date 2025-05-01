@@ -1,6 +1,7 @@
 """Button platform for EGI VRF integration."""
 import logging
 from homeassistant.components.button import ButtonEntity
+from .adapters import get_adapter
 
 from . import const
 

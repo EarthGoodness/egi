@@ -2,6 +2,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import const
 from .const import DOMAIN
+from .adapters import get_adapter
 
 async def async_setup_entry(hass, entry, async_add_entities):
     data = hass.data[const.DOMAIN][entry.entry_id]
