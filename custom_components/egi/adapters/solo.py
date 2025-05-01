@@ -7,7 +7,8 @@ from .base_adapter import BaseAdapter
 
 _LOGGER = logging.getLogger(__name__)
 
-# Mapping of brand codes to human-readable names\ nBRAND_NAMES = {
+# Mapping of brand codes to human-readable names
+BRAND_NAMES = {
     1: "Hitachi VRF (2-wire)", 2: "Daikin VRF (2-wire)", 3: "Toshiba VRF (2-wire)",
     4: "Mitsubishi Heavy Industries VRF (2-wire)", 5: "Mitsubishi Electric VRF (4-wire)",
     6: "Gree VRF (2-wire)", 7: "Hisense VRF (2-wire)", 9: "Haier VRF (3-wire)",
