@@ -4,12 +4,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from . import const
-from .modbus_client import EgiModbusClient, get_shared_client, get_adapter
+from . import const, get_adapter
+from .modbus_client import EgiModbusClient, get_shared_client
 from .options_flow import EgiVrfOptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
-
 
 class EgiVrfConfigFlow(config_entries.ConfigFlow, domain=const.DOMAIN):
     """Handle a config flow for EGI VRF integration."""

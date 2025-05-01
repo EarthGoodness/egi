@@ -3,7 +3,7 @@
 ![HACS badge](https://img.shields.io/badge/HACS-Default-orange.svg)
 ![GitHub release](https://img.shields.io/github/v/release/EarthGoodness/egi_zigbee)
 ![GitHub stars](https://img.shields.io/github/stars/EarthGoodness/egi_zigbee?style=social)
-[![Validate with HACS Action](https://github.com/EarthGoodness/egi_zigbee/actions/workflows/validate.yml/badge.svg)](https://github.com/EarthGoodness/egi_zigbee/actions/workflows/validate.yml)
+[![Validate with HACS Action](https://github.com/EarthGoodness/egi_zigbee/actions/workflows/validate.yml/badge.svg)](https://github.com/EarthGoodness/egi_zigbee/actions/workflows/hacs.yml)
 [![Validate with hassfest Action](https://github.com/EarthGoodness/egi/actions/workflows/hassfest.yml/badge.svg)](https://github.com/EarthGoodness/egi_zigbee/actions/workflows/hassfest.yml)
 
 # EGI Zigbee HVAC/VRF Adapter

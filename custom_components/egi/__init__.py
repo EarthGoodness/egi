@@ -1,6 +1,7 @@
-# __init__.py
+"""EGI integration."""
 import logging
 from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -13,7 +14,7 @@ from .adapters import get_adapter
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "button", "sensor", "select"]
+PLATFORMS = ["sensor", "button", "select"]  # must match the modules you pre-import
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(const.DOMAIN, {})
