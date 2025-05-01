@@ -1,24 +1,28 @@
 """
 Adapter logic for EGI HVAC Adapter Solo (single IDU).
 """
-
 import logging
 from .base_adapter import BaseAdapter
 
 _LOGGER = logging.getLogger(__name__)
 
 BRAND_NAMES = {
-    1: "Hitachi", 2: "Daikin", 3: "Toshiba", 4: "Mitsubishi Heavy",
-    5: "Mitsubishi Electric", 6: "Gree", 7: "Hisense", 8: "Midea",
-    9: "Haier", 10: "LG", 13: "Samsung", 15: "Panasonic", 16: "York",
-    36: "Hitachi Duct", 37: "Daikin Infrared", 38: "Gree Duct 4-wire",
-    39: "Gree Duct 2-wire", 40: "Midea KuFeng", 41: "Daikin MX",
-    42: "Haier Duct", 43: "Hitachi Infrared", 44: "Hisense Duct",
-    45: "Mitsubishi Heavy 2-wire", 46: "Haier Central", 47: "Carrier Duct",
-    48: "Midea CN20", 49: "Cool Wind Coexist", 50: "Midea X1X2",
-    51: "Midea Chemours", 53: "Fujitsu Duct", 54: "Ouke Duct",
-    55: "AUX (2-core)", 56: "AUX (4-core)", 57: "Guangzhou York",
-    58: "York Duct", 59: "Panasonic Wall HK", 88: "Simulator"
+    1: "Hitachi VRF (2-wire)", 2: "Daikin VRF (2-wire)", 3: "Toshiba VRF (2-wire)",
+    4: "Mitsubishi Heavy Industries VRF (2-wire)", 5: "Mitsubishi Electric VRF (4-wire)",
+    6: "Gree VRF (2-wire)", 7: "Hisense VRF (2-wire)", 9: "Haier VRF (3-wire)",
+    10: "LG", 13: "Samsung", 15: "Panasonic VRF (2-wire)", 16: "York VRF (2-wire)",
+    18: "Toshiba Ducted (4-wire)", 19: "Panasonic Ducted (4-wire)",
+    20: "Midea W1/W2 (2-wire)", 36: "Hitachi Ducted (4-wire)", 37: "Daikin IR (2-wire)",
+    38: "Gree Ducted (4-wire)", 39: "Gree Ducted (2-wire)", 40: "Coolwind VRF (4-wire)",
+    41: "Daikin MX Ducted (4-wire)", 42: "Haier Ducted (3-wire)", 43: "Hitachi IR (2-wire)",
+    44: "Hisense Ducted (4-wire)", 45: "Mitsubishi Heavy VRF (3-wire)",
+    46: "Haier REMOTE terminal", 47: "Carrier Ducted (4-wire)", 48: "Midea CN20 (4-wire)",
+    49: "Coolwind Coexistence (bidirectional)", 50: "Midea X1/X2 (2-wire)",
+    51: "Midea Comet (2-wire)", 53: "Fujitsu Ducted (3-wire)", 54: "Ouko Ducted (4-wire)",
+    55: "AUX VRF (2-wire)", 56: "AUX Ducted (4-wire)", 57: "Guangzhou York VRF (4-wire)",
+    58: "York Ducted (4-wire)", 59: "Panasonic Wall-mounted (HK, 4-wire)",
+    68: "E_ELEC", 69: "E_680NEW", 70: "E_680OLD", 71: "E_640HPU",
+    72: "E_640H", 73: "E_640FC", 88: "Simulator"
 }
 
 class AdapterSolo(BaseAdapter):
@@ -104,3 +108,4 @@ class AdapterSolo(BaseAdapter):
 
     def factory_reset(self, client):
         return client.write_register(4016, 1)
+
