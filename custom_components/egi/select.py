@@ -2,6 +2,7 @@ import logging
 from homeassistant.components.select import SelectEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import const
+from .adapters import get_adapter
 
 _LOGGER = logging.getLogger(__name__)
 

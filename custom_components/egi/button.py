@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.button import ButtonEntity
 
 from . import const
+from .adapters import get_adapter
 
 _LOGGER = logging.getLogger(__name__)
 
