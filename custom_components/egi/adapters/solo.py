@@ -45,13 +45,13 @@ class AdapterSolo(BaseAdapter):
     def registers(self) -> list[tuple[int, str]]:
         """List of (register, description) tuples exposed by the Solo adapter."""
         return [
-            (0,    "Power Status"),
-            (1,    "Mode Setting"),
-            (2,    "Temperature Setting"),
-            (3,    "Fan Speed Setting"),
-            (4,    "Louver Direction"),
-            (5,    "Fault Code"),
-            (6,    "Room Temperature"),
+            (0, "Power Status"),
+            (1, "Mode Setting"),
+            (2, "Temperature Setting"),
+            (3, "Fan Speed Setting"),
+            (4, "Louver Direction"),
+            (5, "Fault Code"),
+            (6, "Room Temperature"),
             (2000, "AC Brand"),
             (2001, "Outdoor Unit Address"),
             (2002, "Indoor Unit Address"),
@@ -79,7 +79,7 @@ class AdapterSolo(BaseAdapter):
             _LOGGER.warning("Failed to read Solo adapter info: %s", e)
             return {}
 
-    def scan_devices(self, client) -> list[tuple[int,int]]:
+    def scan_devices(self, client) -> list[tuple[int, int]]:
         """Solo has exactly one device at (0,0)."""
         return [(0, 0)]
 
