@@ -114,15 +114,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(const.DOMAIN, "scan_idus"):
         hass.services.async_register(const.DOMAIN, "scan_idus", async_handle_rescan_service)
 
-    # --- Register device in Home Assistant registry ---
+    # ─── Register a single “adapter” device in HA registry ─────────────────
     device_registry = async_get_device_registry(hass)
-    gw_id = f"gateway_{entry.entry_id}"
+    adapter_id = f"adapter_{entry.entry_id}"
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(const.DOMAIN, gw_id)},
+        identifiers={(const.DOMAIN, adapter_id)},
+        # This will be “EGI Solo Adapter (Simulator)” for Solo
         name=f"{adapter.name} ({coordinator.gateway_brand_name})",
         manufacturer="EGI",
-        model=f"{adapter.name} Adapter",
+        # Or include brand in the model, if you like:
+        model=f"{adapter.name} - {coordinator.gateway_brand_name}",
     )
 
     if coordinator.gateway_brand_code:

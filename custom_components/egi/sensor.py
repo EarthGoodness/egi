@@ -92,12 +92,12 @@ class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         entry_id = self._config_entry.entry_id
         return {
-            "identifiers": {(DOMAIN, f"gateway_{entry_id}")},
+            "identifiers": {(DOMAIN, f"adapter_{entry_id}")},
             "name": f"{self._coordinator.gateway_brand_name} VRF Gateway",
-            "manufacturer": "EGI",
-            "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
-            "sw_version": "1.0",
-        }
+             "manufacturer": "EGI",
+             "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
+             "sw_version": "1.0",
+         }
 
     @property
     def extra_state_attributes(self):

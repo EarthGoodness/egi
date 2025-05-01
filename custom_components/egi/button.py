@@ -74,11 +74,11 @@ class AdapterRestartButton(ButtonEntity):
         self._attr_unique_id = f"{config_entry.entry_id}_restart"
         entry_id = config_entry.entry_id
         self._attr_device_info = {
-            "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
+            "identifiers": {(const.DOMAIN, f"adapter_{entry_id}")},
             "manufacturer": "EGI",
             "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
         }
-
+        
     async def async_press(self):
         _LOGGER.info("Sending adapter restart command...")
         result = await self.hass.async_add_executor_job(
