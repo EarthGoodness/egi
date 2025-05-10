@@ -1,3 +1,5 @@
+# File: custom_components/egi/climate.py
+"""Climate platform for EGI VRF integration."""
 import logging
 import asyncio
 from homeassistant.components.climate import (
@@ -10,25 +12,29 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
+# Mapping between Modbus mode codes and HA HVACMode
 HVAC_MODE_MAP = {
     0x01: HVACMode.COOL,
     0x02: HVACMode.DRY,
     0x04: HVACMode.FAN_ONLY,
-    0x08: HVACMode.HEAT
+    0x08: HVACMode.HEAT,
 }
 
+# Fan mode mappings
 FAN_MODE_MAP = {
     0x00: "auto",
     0x04: "low",
     0x02: "medium",
-    0x01: "high"
+    0x01: "high",
 }
 INV_FAN_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
+# Swing mode mappings
 SWING_MODE_MAP = {
     const.SWING_ON: SWING_ON,
     const.SWING_OFF: SWING_OFF,
@@ -36,13 +42,28 @@ SWING_MODE_MAP = {
 INV_SWING_MODE_MAP = {v: k for k, v in SWING_MODE_MAP.items()}
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up climate entities based on adapter type (Solo vs VRF)."""
     data = hass.data[const.DOMAIN][config_entry.entry_id]
     coord = data["coordinator"]
     adapter = data["adapter"]
-    entities = [EgiVrfClimate(coord, adapter, config_entry, system, index) for (system, index) in coord.devices]
+
+    entities = []
+    # Solo adapter: single climate entity
+    if getattr(adapter, "max_idus", 0) == 1:
+        entities.append(
+            EgiVrfClimate(coord, adapter, config_entry, 1, 1)
+        )
+    # VRF adapters: one per discovered IDU
+    else:
+        for (system, index) in coord.devices:
+            entities.append(
+                EgiVrfClimate(coord, adapter, config_entry, system, index)
+            )
+
     async_add_entities(entities)
 
 class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
+    """Climate entity for EGI Indoor Units."""
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE |
         ClimateEntityFeature.FAN_MODE |
@@ -50,28 +71,47 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_fan_modes = ["auto", "low", "medium", "high"]
-    _attr_swing_modes = ["off", "on"]
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT]
+    _attr_swing_modes = [SWING_OFF, SWING_ON]
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT,
+    ]
 
     def __init__(self, coordinator, adapter, config_entry, system, index):
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.adapter = adapter
-        self._dev_key = f"{system}-{index}"
+        self.coordinator = coordinator
         self._client = coordinator._client
         self._system = system
         self._index = index
         entry_id = config_entry.entry_id
+        # Unique ID per IDU; for Solo this becomes entry_1-1
         self._attr_unique_id = f"{entry_id}_{system}-{index}"
-        self._attr_name = f"Indoor Unit {system}-{index}"
-        self._attr_device_info = {
-            "identifiers": {(const.DOMAIN, f"{entry_id}_idu_{system}-{index}")},
-            "name": self._attr_name,
-            "manufacturer": "EGI",
-            "model": "VRF Indoor Unit",
-            "via_device": (const.DOMAIN, f"gateway_{entry_id}")
-        }
-        
+
+        # Name and device_info differ for Solo vs VRF
+        if getattr(adapter, "max_idus", 0) == 1:
+            # Solo adapter: single device
+            self._attr_name = adapter.name
+            self._attr_device_info = {
+                "identifiers": {(const.DOMAIN, f"adapter_{entry_id}")},
+                "name": adapter.name,
+                "manufacturer": "EGI",
+                "model": adapter.name,
+            }
+        else:
+            # VRF multi-unit: each IDU under gateway
+            self._attr_name = f"Indoor Unit {system}-{index}"
+            self._attr_device_info = {
+                "identifiers": {(const.DOMAIN, f"{entry_id}_idu_{system}-{index}")},
+                "name": self._attr_name,
+                "manufacturer": "EGI",
+                "model": "VRF Indoor Unit",
+                "via_device": (const.DOMAIN, f"gateway_{entry_id}"),
+            }
+
     async def _refresh_idu_immediately(self):
         """Immediately re-poll this specific IDU after a write."""
         try:
@@ -81,38 +121,46 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
                 self._system,
                 self._index,
             )
-            self.coordinator.data[self._dev_key] = data
-            self.async_write_ha_state()  # Update UI immediately
+            # coordinator.data uses keys "system-index"
+            key = f"{self._system}-{self._index}"
+            self.coordinator.data[key] = data
+            self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error("Immediate IDU refresh failed: %s", e)
 
     @property
     def available(self):
-        data = self.coordinator.data.get(self._dev_key)
-        return data.get("available", False) if data else False
+        key = f"{self._system}-{self._index}"
+        data = self.coordinator.data.get(key, {})
+        return data.get("available", False)
 
     @property
     def current_temperature(self):
-        return self.coordinator.data.get(self._dev_key, {}).get("current_temp")
+        key = f"{self._system}-{self._index}"
+        return self.coordinator.data.get(key, {}).get("current_temp")
 
     @property
     def target_temperature(self):
-        temp = self.coordinator.data.get(self._dev_key, {}).get("target_temp")
+        key = f"{self._system}-{self._index}"
+        temp = self.coordinator.data.get(key, {}).get("target_temp")
         return temp if temp and temp > 0 else None
 
     @property
     def fan_mode(self):
-        code = self.coordinator.data.get(self._dev_key, {}).get("fan_code", 0)
+        key = f"{self._system}-{self._index}"
+        code = self.coordinator.data.get(key, {}).get("fan_code", 0)
         return FAN_MODE_MAP.get(code, "auto")
 
     @property
     def swing_mode(self):
-        code = self.coordinator.data.get(self._dev_key, {}).get("wind_code", const.SWING_ON)
-        return "on" if code == const.SWING_ON else "off"
+        key = f"{self._system}-{self._index}"
+        code = self.coordinator.data.get(key, {}).get("wind_code", const.SWING_OFF)
+        return SWING_MODE_MAP.get(code, SWING_OFF)
 
     @property
     def hvac_mode(self):
-        data = self.coordinator.data.get(self._dev_key, {})
+        key = f"{self._system}-{self._index}"
+        data = self.coordinator.data.get(key, {})
         if not data.get("power", False):
             return HVACMode.OFF
         return HVAC_MODE_MAP.get(data.get("mode_code", 0), HVACMode.FAN_ONLY)
@@ -125,7 +173,7 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
             HVACMode.COOL: HVACAction.COOLING,
             HVACMode.HEAT: HVACAction.HEATING,
             HVACMode.DRY: HVACAction.DRYING,
-            HVACMode.FAN_ONLY: HVACAction.FAN
+            HVACMode.FAN_ONLY: HVACAction.FAN,
         }.get(mode, HVACAction.IDLE)
 
     @property
@@ -138,15 +186,14 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def extra_state_attributes(self):
-        data = self.coordinator.data.get(self._dev_key, {})
-        brand_code = self.coordinator.gateway_brand_code
-        brand_name = self.coordinator.gateway_brand_name
+        key = f"{self._system}-{self._index}"
+        data = self.coordinator.data.get(key, {})
         return {
-            "brand_code": brand_code,
-            "brand_name": brand_name,
+            "brand_code": self.coordinator.gateway_brand_code,
+            "brand_name": self.coordinator.gateway_brand_name,
             "error_code": data.get("error_code"),
             "system": self._system,
-            "idu_index": self._index
+            "idu_index": self._index,
         }
 
     async def async_set_temperature(self, **kwargs):
@@ -177,17 +224,16 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
         await self._refresh_idu_immediately()
 
     async def async_set_swing_mode(self, swing_mode: str):
-        wind_code = const.SWING_MODE_HA_TO_MODBUS.get(swing_mode, const.SWING_OFF)
+        if swing_mode not in INV_SWING_MODE_MAP:
+            _LOGGER.error("Unsupported swing mode: %s", swing_mode)
+            return
+        code = INV_SWING_MODE_MAP[swing_mode]
         await self.hass.async_add_executor_job(
             self.adapter.write_swing,
             self._client,
             self._system,
             self._index,
-            wind_code,
-        )
-        _LOGGER.debug(
-            "Set swing mode of %s to %s (Modbus code: 0x%02X)",
-            self._dev_key, swing_mode, wind_code
+            code,
         )
         await self._refresh_idu_immediately()
 
@@ -200,6 +246,7 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
             HVACMode.FAN_ONLY: const.MODE_FAN,
         }.get(hvac_mode, const.MODE_COOL)
 
+        # Set power
         await self.hass.async_add_executor_job(
             self.adapter.write_power,
             self._client,
@@ -207,7 +254,7 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
             self._index,
             power_on,
         )
-
+        # If turning on, also set mode
         if power_on:
             await self.hass.async_add_executor_job(
                 self.adapter.write_mode,
@@ -216,5 +263,4 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
                 self._index,
                 mode_code,
             )
-
         await self._refresh_idu_immediately()

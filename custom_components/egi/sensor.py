@@ -11,24 +11,28 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up sensors based on adapter capabilities."""
-    data = hass.data[const.DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
     adapter = data["adapter"]
 
     entities = []
 
-    # Use adapter.registers if provided (e.g., SoloAdapter)
+    # Only expose raw registers if adapter supports scanning (i.e., VRF adapters)
     registers = getattr(adapter, "registers", None)
-    if registers:
+    if registers and getattr(adapter, "supports_scan", False):
         for register, description in registers:
             entities.append(
                 RegisterSensor(coordinator, entry, adapter, register, description)
             )
-    else:
-        # Fallback for gateway-level sensors (Light/Pro)
-        entities.append(VrfGatewaySensor(coordinator, entry, adapter))
+    # Add gateway‐level sensor only for multi‐unit (VRF) adapters
+    elif getattr(adapter, "max_idus", 1) > 1:
+        entities.append(
+            VrfGatewaySensor(coordinator, entry, adapter)
+        )
 
-    async_add_entities(entities)
+    # If we collected anything, register them with Home Assistant
+    if entities:
+        async_add_entities(entities)
 
 
 class RegisterSensor(CoordinatorEntity, SensorEntity):
@@ -50,7 +54,7 @@ class RegisterSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Return current value for this register from coordinator."""
+        """Return current value for this register from coordinator data."""
         data = getattr(self.coordinator, "data", {}) or {}
         return data.get(self._register)
 
@@ -68,7 +72,7 @@ class RegisterSensor(CoordinatorEntity, SensorEntity):
 
 
 class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
-    """Gateway-level sensor for VRF Light/Pro adapters."""
+    """Gateway‐level sensor for VRF Light/Pro adapters."""
 
     def __init__(self, coordinator, entry, adapter):
         super().__init__(coordinator)
@@ -94,14 +98,14 @@ class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
         return {
             "identifiers": {(DOMAIN, f"adapter_{entry_id}")},
             "name": f"{self._coordinator.gateway_brand_name} VRF Gateway",
-             "manufacturer": "EGI",
-             "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
-             "sw_version": "1.0",
-         }
+            "manufacturer": "EGI",
+            "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
+            "sw_version": "1.0",
+        }
 
     @property
     def extra_state_attributes(self):
-        data = getattr(self._coordinator, "adapter_info", {}) or {}
+        data = getattr(self.coordinator, "adapter_info", {}) or {}
         brand_code = data.get("brand_code")
         return {
             "brand_code": brand_code,

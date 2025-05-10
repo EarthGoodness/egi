@@ -1,27 +1,31 @@
-# button.py
+# File: custom_components/egi/button.py
 """Button platform for EGI VRF integration."""
 import logging
 from homeassistant.components.button import ButtonEntity
 
 from . import const
-from .adapters import get_adapter
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up buttons based on adapter capabilities."""
     data = hass.data[const.DOMAIN][config_entry.entry_id]
     coordinator = data["coordinator"]
     adapter = data["adapter"]
 
-    buttons = [
-        EgiVrfRescanButton(coordinator, config_entry, adapter),
-    ]
+    buttons = []
 
+    # Only add rescan for multi-unit (VRF) adapters
+    if getattr(adapter, "supports_scan", False):
+        buttons.append(EgiVrfRescanButton(coordinator, config_entry, adapter))
+
+    # Add restart and factory reset if supported by adapter
     if getattr(adapter, "supports_brand_write", False):
         buttons.append(AdapterRestartButton(coordinator, config_entry, adapter))
         buttons.append(AdapterFactoryResetButton(coordinator, config_entry, adapter))
 
-    async_add_entities(buttons)
+    if buttons:
+        async_add_entities(buttons)
 
 
 class EgiVrfRescanButton(ButtonEntity):
@@ -43,7 +47,7 @@ class EgiVrfRescanButton(ButtonEntity):
 
     async def async_press(self):
         new_found = []
-        existing_set = {(sys, idx) for (sys, idx) in self._coordinator.devices}
+        existing_set = set(self._coordinator.devices)
 
         def _scan():
             return self._adapter.scan_devices(self._client)
@@ -55,7 +59,8 @@ class EgiVrfRescanButton(ButtonEntity):
 
         if new_found:
             _LOGGER.info(
-                "Rescan found new indoor units: %s. Reloading integration to add them.", new_found
+                "Rescan found new indoor units: %s. Reloading integration to add them.",
+                new_found,
             )
             await self.hass.config_entries.async_reload(self._entry.entry_id)
         else:
@@ -78,7 +83,7 @@ class AdapterRestartButton(ButtonEntity):
             "manufacturer": "EGI",
             "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
         }
-        
+
     async def async_press(self):
         _LOGGER.info("Sending adapter restart command...")
         result = await self.hass.async_add_executor_job(
@@ -103,7 +108,7 @@ class AdapterFactoryResetButton(ButtonEntity):
         self._attr_unique_id = f"{config_entry.entry_id}_factory_reset"
         entry_id = config_entry.entry_id
         self._attr_device_info = {
-            "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
+            "identifiers": {(const.DOMAIN, f"adapter_{entry_id}")},
             "manufacturer": "EGI",
             "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
         }
