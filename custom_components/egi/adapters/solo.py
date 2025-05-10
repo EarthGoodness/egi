@@ -115,3 +115,35 @@ class AdapterSolo(BaseAdapter):
 
     def factory_reset(self, client):
         return client.write_register(4016, 1)
+
+    def decode_mode(self, value):
+        return {
+            0x01: "heat",
+            0x02: "cool",
+            0x04: "fan_only",
+            0x08: "dry",
+        }.get(value, "fan_only")
+
+    def encode_mode(self, ha_mode):
+        return {
+            "heat": 0x01,
+            "cool": 0x02,
+            "fan_only": 0x04,
+            "dry": 0x08,
+        }.get(ha_mode, 0x02)
+
+    def decode_fan(self, value):
+        return {
+            0x00: "auto",
+            0x01: "low",
+            0x02: "medium",
+            0x03: "high",
+        }.get(value, "auto")
+
+    def encode_fan(self, ha_fan):
+        return {
+            "auto": 0x00,
+            "low": 0x01,
+            "medium": 0x02,
+            "high": 0x03,
+        }.get(ha_fan, 0x00)
