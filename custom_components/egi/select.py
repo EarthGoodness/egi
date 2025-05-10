@@ -18,6 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     else:
         _LOGGER.debug("Adapter does not support brand selection: %s", adapter.name)
 
+
 class VrfBrandSelect(CoordinatorEntity, SelectEntity):
     def __init__(self, coordinator, config_entry, adapter, brand_names):
         super().__init__(coordinator)
@@ -27,15 +28,19 @@ class VrfBrandSelect(CoordinatorEntity, SelectEntity):
         self._brand_names = brand_names
         self._brand_reverse = {v: k for k, v in brand_names.items()}
 
-        self._attr_name = "VRF Brand Selection"
+        self._attr_name = "AC Brand"
         self._attr_unique_id = f"{config_entry.entry_id}_brand_select"
         self._attr_icon = "mdi:factory"
         self._attr_options = list(brand_names.values())
+
+        entry_id = config_entry.entry_id
+        brand_code = coordinator.gateway_brand_code
+        brand_name = adapter.get_brand_name(brand_code)
         self._attr_device_info = {
-            "identifiers": {(const.DOMAIN, f"gateway_{config_entry.entry_id}")},
-            "name": "VRF Gateway",
+            "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
+            "name": adapter.name,
             "manufacturer": "EGI",
-            "model": "VRF Gateway",
+            "model": f"{adapter.display_type} - {brand_name}",
         }
 
     @property
@@ -54,5 +59,3 @@ class VrfBrandSelect(CoordinatorEntity, SelectEntity):
                 await self.coordinator.async_request_refresh()
         except Exception as e:
             _LOGGER.error("Brand selection failed: %s", e)
-
-

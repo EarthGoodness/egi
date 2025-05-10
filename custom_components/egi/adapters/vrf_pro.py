@@ -9,20 +9,21 @@ from .base_adapter import BaseAdapter
 _LOGGER = logging.getLogger(__name__)
 
 BRAND_NAMES = {
-    1: "Hitachi", 2: "Daikin", 3: "Toshiba", 4: "Mitsubishi Heavy",
-    5: "Mitsubishi", 6: "Gree", 7: "Hisense", 8: "Midea",
-    9: "Haier", 10: "LG", 13: "Samsung", 14: "AUX", 15: "Panasonic",
-    16: "York", 19: "GREE4", 21: "McQuay", 24: "TCL", 25: "CHIGO",
-    26: "TICA", 35: "York T8600", 36: "COOLFAN", 37: "Qingdao York",
-    38: "Fujitsu", 39: "Samsung NotNASA", 40: "Samsung NASA",
-    41: "Gree FG", 42: "LUKO", 101: "CH-Emerson", 102: "CH-McQuay",
-    103: "Trane", 104: "CH-Carrier", 255: "Emulator"
+    1: "Hitachi VRF", 2: "Daikin VRV", 3: "Toshiba VRF", 4: "Mitsubishi Heavy VRF",
+    5: "Mitsubishi Electric VRF", 6: "Gree VRF", 7: "Hisense VRF", 8: "Midea VRF",
+    9: "Haier VRF", 10: "LG VRF", 13: "Samsung VRF", 14: "AUX VRF", 15: "Panasonic VRF",
+    16: "York VRF", 19: "GREE 4 VRF", 21: "McQuay VRF", 24: "TCL VRF", 25: "CHIGO VRF",
+    26: "TICA VRF", 35: "York T8600 VRF", 36: "COOLFAN VRF", 37: "Qingdao York VRF",
+    38: "Fujitsu VRF", 39: "Samsung NotNASA VRF", 40: "Samsung NASA VRF",
+    41: "Gree FG VRF", 42: "LUKO VRF", 101: "CH-Emerson VRF", 102: "CH-McQuay VRF",
+    103: "Trane VRF", 104: "CH-Carrier VRF", 255: "VRF Simulator"
 }
 
 class AdapterVrfPro(BaseAdapter):
     def __init__(self):
         super().__init__()
         self.name = "EGI VRF Adapter Pro"
+        self.display_type = "VRF Adapter"
         self.max_idus = 64
         self.supports_brand_write = True
         self.BRAND_NAMES = BRAND_NAMES
@@ -30,20 +31,48 @@ class AdapterVrfPro(BaseAdapter):
     def get_brand_name(self, code):
         return BRAND_NAMES.get(code, f"Unknown ({code})")
 
+    def decode_mode(self, value):
+        return {
+            0x01: "heat",
+            0x02: "cool",
+            0x04: "fan_only",
+            0x08: "dry",
+        }.get(value, "fan_only")
+
+    def encode_mode(self, ha_mode):
+        return {
+            "heat": 0x01,
+            "cool": 0x02,
+            "fan_only": 0x04,
+            "dry": 0x08,
+        }.get(ha_mode, 0x02)
+
+    def decode_fan(self, value):
+        return {
+            0x00: "auto",
+            0x01: "low",
+            0x02: "medium",
+            0x03: "high",
+        }.get(value, "auto")
+
+    def encode_fan(self, ha_fan):
+        return {
+            "auto": 0x00,
+            "low": 0x01,
+            "medium": 0x02,
+            "high": 0x03,
+        }.get(ha_fan, 0x00)
+
     def read_adapter_info(self, client):
         try:
-            # Read D0015 (address 15) — contains brand in B0–7, slave ID in B8–15
             regs = client.read_holding_registers(15, 1)
             if not regs or len(regs) != 1:
                 _LOGGER.warning("Failed to read D0015 from adapter.")
                 return {}
-    
             raw = regs[0]
             brand_code = raw & 0xFF
             slave_id = (raw >> 8) & 0xFF
-    
             _LOGGER.debug("Pro adapter info: D0015=0x%04X → brand=%d, slave_id=%d", raw, brand_code, slave_id)
-    
             return {
                 "brand_code": brand_code,
                 "slave_id": slave_id
@@ -120,38 +149,27 @@ class AdapterVrfPro(BaseAdapter):
     def write_swing(self, client, system, index, swing_code: int):
         return client.write_register(24000 + index * 16 + 7, swing_code)
 
-
     def restart_device(self, client):
-        """Restart host via D62005 = 0x0080 (function 0x10)."""
         _LOGGER.info("Triggering host restart via D62005 = 0x0080")
         return client.write_registers(62005, [0x0080])
-    
+
     def factory_reset(self, client):
-        """Assumed factory reset via D62007 = 0x0001."""
         _LOGGER.info("Triggering factory reset via D62007 = 0x0001")
         return client.write_registers(62005, [0x0040])
-    
+
     def write_brand_code(self, client, brand_id: int):
-        """
-        Write brand code (B0–7) to D62006 with B8–15 zeroed,
-        then restart adapter via D62005 = 0x0080.
-        """
-        brand_word = brand_id & 0x00FF  # Ensure upper byte is 0
+        brand_word = brand_id & 0x00FF
         _LOGGER.info("Writing brand code to D62006: 0x%04X", brand_word)
-    
         success = client.write_registers(62006, [brand_word])
         if not success:
             _LOGGER.warning("Failed to write brand code to D62006")
             return False
-    
         _LOGGER.info("Restarting adapter via D62005 = 0x0080")
         return client.write_registers(62005, [0x0080])
 
     def write_system_time(self, client, dt: datetime = None):
-        """Write host time to D62000–D62002 using function 0x10."""
         if dt is None:
             dt = datetime.now()
-    
         regs = [
             ((dt.year - 2000) << 8) | dt.month,
             (dt.day << 8) | dt.hour,
@@ -159,4 +177,3 @@ class AdapterVrfPro(BaseAdapter):
         ]
         _LOGGER.info("Writing system time to adapter: %s → %s", dt.isoformat(), regs)
         return client.write_registers(62000, regs)
-

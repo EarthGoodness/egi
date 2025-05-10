@@ -15,49 +15,83 @@ CONTROL_BASE_ADDR = 4000
 CONTROL_REG_COUNT = 4
 
 BRAND_NAMES = {
-    0x01: "Hitachi",
-    0x02: "Daikin",
-    0x03: "Toshiba",
-    0x04: "Mitsubishi Heavy",
-    0x05: "Mitsubishi",
-    0x06: "Gree",
-    0x07: "Hisense",
-    0x08: "Midea",
-    0x09: "Haier",
-    0x0A: "LG",
-    0x0D: "Samsung",
-    0x0E: "AUX",
-    0x0F: "Panasonic",
-    0x10: "York",
-    0x15: "McQuay",
-    0x18: "TCL",
-    0x1A: "Tianjia",
-    0x23: "York Water",
-    0x24: "Cool Wind",
-    0x25: "Qingdao York",
-    0x26: "Fujitsu",
-    0x65: "Emerson Water",
-    0x66: "McQuay Water",
-    0x7E: "Toshiba",
-    0xFF: "Simulator",
+    0x01: "Hitachi VRF",
+    0x02: "Daikin VRV",
+    0x03: "Toshiba VRF",
+    0x04: "Mitsubishi Heavy VRF",
+    0x05: "Mitsubishi Electric VRF",
+    0x06: "Gree VRF",
+    0x07: "Hisense VRF",
+    0x08: "Midea VRF",
+    0x09: "Haier VRF",
+    0x0A: "LG VRF",
+    0x0D: "Samsung VRF",
+    0x0E: "AUX VRF",
+    0x0F: "Panasonic VRF",
+    0x10: "York VRF",
+    0x15: "McQuay VRF",
+    0x18: "TCL VRF",
+    0x1A: "Tianjia VRF",
+    0x23: "York Water VRF",
+    0x24: "Cool Wind VRF",
+    0x25: "Qingdao York VRF",
+    0x26: "Fujitsu VRF",
+    0x65: "Emerson Water VRF",
+    0x66: "McQuay Water VRF",
+    0x7E: "Toshiba VRF",
+    0xFF: "VRF Simulator",
 }
 
 class AdapterVrfLight(BaseAdapter):
+    BRAND_NAMES = BRAND_NAMES
+
     def __init__(self):
         super().__init__()
         self.name = "EGI VRF Adapter Light"
+        self.display_type = "VRF Adapter"
         self.max_idus = 256
         self.supports_brand_write = False
 
     def get_brand_name(self, code):
         return BRAND_NAMES.get(code, f"Unknown (0x{code:02X})")
 
+    def decode_mode(self, value):
+        return {
+            0x01: "heat",
+            0x02: "cool",
+            0x04: "fan_only",
+            0x08: "dry",
+        }.get(value, "fan_only")
+
+    def encode_mode(self, ha_mode):
+        return {
+            "heat": 0x01,
+            "cool": 0x02,
+            "fan_only": 0x04,
+            "dry": 0x08,
+        }.get(ha_mode, 0x02)
+
+    def decode_fan(self, value):
+        return {
+            0x00: "auto",
+            0x01: "low",
+            0x02: "medium",
+            0x03: "high",
+        }.get(value, "auto")
+
+    def encode_fan(self, ha_fan):
+        return {
+            "auto": 0x00,
+            "low": 0x01,
+            "medium": 0x02,
+            "high": 0x03,
+        }.get(ha_fan, 0x00)
+
     def read_adapter_info(self, client):
         try:
             regs = client.read_holding_registers(ADAPTER_INFO_ADDR, ADAPTER_INFO_REG_COUNT)
             if not regs:
                 return {}
-
             return {
                 "brand_code": regs[0] & 0xFF,
                 "supported_modes": regs[1],

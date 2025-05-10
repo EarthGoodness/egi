@@ -1,53 +1,51 @@
-# File: custom_components/egi/button.py
 """Button platform for EGI VRF integration."""
 import logging
 from homeassistant.components.button import ButtonEntity
-
 from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up buttons based on adapter capabilities."""
     data = hass.data[const.DOMAIN][config_entry.entry_id]
     coordinator = data["coordinator"]
     adapter = data["adapter"]
 
     buttons = []
 
-    # Only add rescan for multi-unit (VRF) adapters
     if getattr(adapter, "supports_scan", False):
         buttons.append(EgiVrfRescanButton(coordinator, config_entry, adapter))
 
-    # Add restart and factory reset if supported by adapter
     if getattr(adapter, "supports_brand_write", False):
         buttons.append(AdapterRestartButton(coordinator, config_entry, adapter))
+
+    if getattr(adapter, "supports_factory_reset", False):
         buttons.append(AdapterFactoryResetButton(coordinator, config_entry, adapter))
 
-    if buttons:
-        async_add_entities(buttons)
+    async_add_entities(buttons)
 
 
 class EgiVrfRescanButton(ButtonEntity):
-    """Rescan Indoor Units button entity."""
-
     def __init__(self, coordinator, config_entry, adapter):
         self._coordinator = coordinator
+        self._client = coordinator._client
         self._adapter = adapter
         self._entry = config_entry
-        self._client = coordinator._client
-        self._attr_name = "Rescan Indoor Units"
-        self._attr_unique_id = f"{config_entry.entry_id}_rescan"
+
         entry_id = config_entry.entry_id
+        brand_name = adapter.get_brand_name(coordinator.gateway_brand_code)
+
+        self._attr_name = "Rescan Indoor Units"
+        self._attr_unique_id = f"{entry_id}_rescan"
         self._attr_device_info = {
             "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
+            "name": adapter.name,
             "manufacturer": "EGI",
-            "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
+            "model": f"{adapter.display_type} - {brand_name}",
         }
 
     async def async_press(self):
         new_found = []
-        existing_set = set(self._coordinator.devices)
+        existing_set = {(sys, idx) for (sys, idx) in self._coordinator.devices}
 
         def _scan():
             return self._adapter.scan_devices(self._client)
@@ -58,37 +56,34 @@ class EgiVrfRescanButton(ButtonEntity):
                 new_found.append(dev)
 
         if new_found:
-            _LOGGER.info(
-                "Rescan found new indoor units: %s. Reloading integration to add them.",
-                new_found,
-            )
+            _LOGGER.info("Rescan found new indoor units: %s. Reloading integration to add them.", new_found)
             await self.hass.config_entries.async_reload(self._entry.entry_id)
         else:
             _LOGGER.info("Rescan completed: no new indoor units found.")
 
 
 class AdapterRestartButton(ButtonEntity):
-    """Restart Adapter button entity."""
-
     def __init__(self, coordinator, config_entry, adapter):
-        self._coordinator = coordinator
         self._adapter = adapter
         self._client = coordinator._client
-        self._entry = config_entry
-        self._attr_name = "Restart Adapter"
-        self._attr_unique_id = f"{config_entry.entry_id}_restart"
+
         entry_id = config_entry.entry_id
+        brand_name = adapter.get_brand_name(coordinator.gateway_brand_code)
+
+        self._attr_name = "Restart Adapter"
+        self._attr_unique_id = f"{entry_id}_restart"
         self._attr_device_info = {
-            "identifiers": {(const.DOMAIN, f"adapter_{entry_id}")},
+            "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
+            "name": adapter.name,
             "manufacturer": "EGI",
-            "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
+            "model": f"{adapter.display_type} - {brand_name}",
         }
 
     async def async_press(self):
         _LOGGER.info("Sending adapter restart command...")
         result = await self.hass.async_add_executor_job(
             self._adapter.restart_device,
-            self._client,
+            self._client
         )
         if result:
             _LOGGER.info("Adapter restart command succeeded.")
@@ -97,27 +92,27 @@ class AdapterRestartButton(ButtonEntity):
 
 
 class AdapterFactoryResetButton(ButtonEntity):
-    """Factory Reset Adapter button entity."""
-
     def __init__(self, coordinator, config_entry, adapter):
-        self._coordinator = coordinator
         self._adapter = adapter
         self._client = coordinator._client
-        self._entry = config_entry
-        self._attr_name = "Reset to Factory Defaults"
-        self._attr_unique_id = f"{config_entry.entry_id}_factory_reset"
+
         entry_id = config_entry.entry_id
+        brand_name = adapter.get_brand_name(coordinator.gateway_brand_code)
+
+        self._attr_name = "Reset to Factory Defaults"
+        self._attr_unique_id = f"{entry_id}_factory_reset"
         self._attr_device_info = {
-            "identifiers": {(const.DOMAIN, f"adapter_{entry_id}")},
+            "identifiers": {(const.DOMAIN, f"gateway_{entry_id}")},
+            "name": adapter.name,
             "manufacturer": "EGI",
-            "model": f"{self._adapter.name} - {self._coordinator.gateway_brand_name}",
+            "model": f"{adapter.display_type} - {brand_name}",
         }
 
     async def async_press(self):
         _LOGGER.info("Sending factory reset command to adapter...")
         result = await self.hass.async_add_executor_job(
             self._adapter.factory_reset,
-            self._client,
+            self._client
         )
         if result:
             _LOGGER.info("Factory reset command succeeded.")
