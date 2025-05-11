@@ -69,6 +69,54 @@
           "description": "Brand code to set (numeric)."
         }
       }
+    },
+    "set_log_level": {
+      "name": "Set Log Level",
+      "description": "Change the logging level for EGI integration modules.",
+      "fields": {
+        "level": {
+          "name": "Log Level",
+          "description": "Choose the log level: debug, info, warning, or error."
+        }
+      }
+    },
+    "discover_adapters": {
+      "name": "Discover EGI Adapters",
+      "description": "Scan a serial or TCP Modbus line to detect all connected EGI adapters.",
+      "fields": {
+        "connection_type": {
+          "name": "Connection Type",
+          "description": "Either 'serial' or 'tcp'."
+        },
+        "port": {
+          "name": "Serial Port",
+          "description": "e.g. /dev/ttyUSB0 (required for serial)"
+        },
+        "baudrate": {
+          "name": "Baud Rate",
+          "description": "Modbus baud rate (e.g. 9600)"
+        },
+        "parity": {
+          "name": "Parity",
+          "description": "Serial parity: E, N, or O"
+        },
+        "stopbits": {
+          "name": "Stop Bits",
+          "description": "Typically 1"
+        },
+        "bytesize": {
+          "name": "Byte Size",
+          "description": "Typically 8"
+        },
+        "host": {
+          "name": "Host IP",
+          "description": "IP address of Modbus TCP adapter (for TCP discovery)"
+        },
+        "slave_range": {
+          "name": "Slave ID Range",
+          "description": "List of Modbus slave IDs to scan (e.g. [1, 10])"
+        }
+      }
     }
   }
 }
