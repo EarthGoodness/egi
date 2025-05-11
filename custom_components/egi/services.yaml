@@ -6,6 +6,8 @@ scan_idus:
       name: "Entry ID"
       description: "(Optional) Specific integration entry ID to scan. Leave blank to scan all entries."
       example: "01JPZB2X3BT874XFX524FG0MAR"
+      selector:
+        text:
 
 set_system_time:
   name: Set Adapter Time
@@ -18,17 +20,16 @@ set_system_time:
         text:
       description: "Find the entry_id in Developer Tools → States → any egi.* entity → attributes."
 
-
 set_brand_code:
   name: Set Adapter Brand
   description: Set the HVAC brand code for the adapter and trigger restart.
   fields:
-  entry_id:
-    required: true
-    example: abc123
-    selector:
-      text:
-    description: "Find the entry_id in Developer Tools → States → any egi.* entity → attributes."
+    entry_id:
+      required: true
+      example: abc123
+      selector:
+        text:
+      description: "Find the entry_id in Developer Tools → States → any egi.* entity → attributes."
 
     brand_code:
       required: true

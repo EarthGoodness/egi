@@ -34,12 +34,14 @@ class EgiVrfCoordinator(DataUpdateCoordinator):
             )
             if isinstance(adapter_info, dict):
                 self.adapter_info = adapter_info
-                self.gateway_brand_code = adapter_info.get("brand_code", 0)
-                self.gateway_brand_name = self._adapter.get_brand_name(self.gateway_brand_code)
-                _LOGGER.info(
-                    "Detected VRF adapter: brand_code=0x%02X name=%s",
-                    self.gateway_brand_code, self.gateway_brand_name
-                )
+                new_brand_code = adapter_info.get("brand_code", 0)
+                if new_brand_code != self.gateway_brand_code:
+                    self.gateway_brand_code = new_brand_code
+                    self.gateway_brand_name = self._adapter.get_brand_name(new_brand_code)
+                    _LOGGER.info(
+                        "Detected VRF adapter: brand_code=0x%02X name=%s",
+                        self.gateway_brand_code, self.gateway_brand_name
+                    )
             else:
                 _LOGGER.warning("Adapter returned non-dict info: %s", adapter_info)
         except Exception as e:
@@ -81,4 +83,3 @@ class EgiVrfCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Unable to create polling duration sensor: %s", e)
 
         return data
-
