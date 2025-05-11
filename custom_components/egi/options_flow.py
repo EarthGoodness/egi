@@ -10,12 +10,14 @@ class EgiVrfOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
     async def async_step_init(self, user_input=None):
         """Initial options form: poll interval + optional restart/reset."""
+        _LOGGER.debug("Entered options flow for entry_id: %s", self.config_entry.entry_id)
         errors = {}
         poll_interval_default = self.config_entry.options.get("poll_interval", 2)
 
         if user_input is not None:
             updated_options = dict(self.config_entry.options)
             updated_options["poll_interval"] = user_input.get("poll_interval", poll_interval_default)
+            _LOGGER.debug("Options updated for entry_id %s: %s", self.config_entry.entry_id, updated_options)
 
             # Handle optional actions
             if user_input.get("trigger_restart"):

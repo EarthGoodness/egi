@@ -1,5 +1,5 @@
 """Base class for EGI VRF adapter profiles."""
-
+import logging
 
 class BaseAdapter:
     """
@@ -9,6 +9,7 @@ class BaseAdapter:
 
     def __init__(self):
         # Common flags or info; subclasses can override
+        self._log = logging.getLogger(f"custom_components.egi.adapter.{self.__class__.__name__}")
         self.name = "BaseAdapter"
         self.max_idus = 1
         self.supports_brand_write = False

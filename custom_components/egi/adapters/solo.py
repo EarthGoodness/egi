@@ -4,8 +4,6 @@ Adapter logic for EGI HVAC Adapter Solo (single IDU).
 import logging
 from .base_adapter import BaseAdapter
 
-_LOGGER = logging.getLogger(__name__)
-
 BRAND_NAMES = {
     1: "Hitachi VRF (2-wire)", 2: "Daikin VRF (2-wire)", 3: "Toshiba VRF (2-wire)",
     4: "Mitsubishi Heavy Industries VRF (2-wire)", 5: "Mitsubishi Electric VRF (4-wire)",
@@ -21,8 +19,10 @@ BRAND_NAMES = {
     51: "Midea Comet (2-wire)", 53: "Fujitsu Ducted (3-wire)", 54: "Ouko Ducted (4-wire)",
     55: "AUX VRF (2-wire)", 56: "AUX Ducted (4-wire)", 57: "Guangzhou York VRF (4-wire)",
     58: "York Ducted (4-wire)", 59: "Panasonic Wall-mounted (HK, 4-wire)",
-    68: "Electra Central HVAC", 69: "Tadiran Central HVAC (TAC680 New)", 70: "Tadiran Central HVAC (TAC680 Old)", 71: "Tadiran Central HVAC (TAC640HPU)",
-    72: "Tadiran Central HVAC (TAC640H)", 73: "Tadiran Central HVAC (TAC640FC)", 88: "HVAC Simulator"
+    68: "Electra Central HVAC", 69: "Tadiran Central HVAC (TAC680 New)",
+    70: "Tadiran Central HVAC (TAC680 Old)", 71: "Tadiran Central HVAC (TAC640HPU)",
+    72: "Tadiran Central HVAC (TAC640H)", 73: "Tadiran Central HVAC (TAC640FC)",
+    88: "HVAC Simulator"
 }
 
 
@@ -31,8 +31,9 @@ class AdapterSolo(BaseAdapter):
 
     def __init__(self):
         super().__init__()
-        self.name = "EGI HVAC Adapter Solo"              # → For device_info["name"]
-        self.display_type = "Solo Adapter"               # → For device_info["model"]
+        self._log = logging.getLogger(f"custom_components.egi.adapter.{self.__class__.__name__}")
+        self.name = "EGI HVAC Adapter Solo"
+        self.display_type = "Solo Adapter"
         self.max_idus = 1
         self.supports_scan = False
         self.supports_brand_write = True
@@ -46,7 +47,9 @@ class AdapterSolo(BaseAdapter):
         try:
             reg = client.read_holding_registers(2000, 1)
             if not reg:
+                self._log.warning("Solo: No response for adapter info (D2000).")
                 return {}
+            self._log.debug("Solo adapter info: D2000 = %s", reg)
             return {
                 "brand_code": reg[0],
                 "supported_modes": 0,
@@ -55,10 +58,11 @@ class AdapterSolo(BaseAdapter):
                 "special_info": 0,
             }
         except Exception as e:
-            _LOGGER.warning("Failed to read Solo adapter info: %s", e)
+            self._log.warning("Failed to read Solo adapter info: %s", e)
             return {}
 
     def scan_devices(self, client):
+        self._log.debug("Solo scan_devices always returns one device (0,0).")
         return [(0, 0)]
 
     def read_status(self, client, system, index):
@@ -74,8 +78,10 @@ class AdapterSolo(BaseAdapter):
         }
         try:
             regs = client.read_holding_registers(0, 7)
-            if not regs:
+            if not regs or len(regs) < 7:
+                self._log.warning("Solo read_status: no or partial response from IDU 0-0")
                 return data
+
             data["available"] = True
             data["power"] = bool(regs[0])
             data["mode_code"] = regs[1] & 0xFF
@@ -84,36 +90,46 @@ class AdapterSolo(BaseAdapter):
             data["wind_code"] = regs[4] & 0xFF
             data["error_code"] = regs[5]
             data["current_temp"] = regs[6]
+
+            self._log.debug("Solo read_status for IDU 0-0: %s", data)
         except Exception as e:
-            _LOGGER.error("Error reading Solo status: %s", e)
+            self._log.error("Error reading Solo status: %s", e)
         return data
 
     def write_power(self, client, system, index, power_on: bool):
+        self._log.info("Solo write_power(%s) to IDU 0-0", power_on)
         return client.write_register(4000, 1 if power_on else 0)
 
     def write_mode(self, client, system, index, mode_code: int):
+        self._log.info("Solo write_mode(%s) to IDU 0-0", mode_code)
         return client.write_register(4001, mode_code & 0x0F)
 
     def write_temperature(self, client, system, index, temp: int):
         tval = max(16, min(30, temp))
+        self._log.info("Solo write_temperature(%s → %s) to IDU 0-0", temp, tval)
         return client.write_register(4002, tval)
 
     def write_fan_speed(self, client, system, index, fan_code: int):
+        self._log.info("Solo write_fan_speed(%s) to IDU 0-0", fan_code)
         return client.write_register(4003, fan_code & 0x0F)
 
     def write_swing(self, client, system, index, swing_code: int):
+        self._log.info("Solo write_swing(%s) to IDU 0-0", swing_code)
         return client.write_register(4004, swing_code & 0xFF)
 
     def write_brand_code(self, client, brand_id: int):
+        self._log.info("Solo write_brand_code(%s) + restart", brand_id)
         success = client.write_register(4010, brand_id & 0xFF)
         if success:
             client.write_register(4015, 1)
         return success
 
     def restart_device(self, client):
+        self._log.info("Solo restart_device()")
         return client.write_register(4015, 1)
 
     def factory_reset(self, client):
+        self._log.info("Solo factory_reset()")
         return client.write_register(4016, 1)
 
     def decode_mode(self, value):

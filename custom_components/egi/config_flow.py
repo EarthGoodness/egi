@@ -1,4 +1,4 @@
-'''Config flow for EGI VRF integration.'''
+"""Config flow for EGI VRF integration."""
 import logging
 import voluptuous as vol
 from homeassistant import config_entries

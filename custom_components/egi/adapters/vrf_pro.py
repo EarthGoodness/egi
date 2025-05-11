@@ -22,6 +22,7 @@ BRAND_NAMES = {
 class AdapterVrfPro(BaseAdapter):
     def __init__(self):
         super().__init__()
+        self._log = logging.getLogger(f"custom_components.egi.adapter.{self.__class__.__name__}")
         self.name = "EGI VRF Adapter Pro"
         self.display_type = "VRF Adapter"
         self.max_idus = 64
@@ -67,18 +68,18 @@ class AdapterVrfPro(BaseAdapter):
         try:
             regs = client.read_holding_registers(15, 1)
             if not regs or len(regs) != 1:
-                _LOGGER.warning("Failed to read D0015 from adapter.")
+                self._log.warning("Failed to read D0015 from adapter.")
                 return {}
             raw = regs[0]
             brand_code = raw & 0xFF
             slave_id = (raw >> 8) & 0xFF
-            _LOGGER.debug("Pro adapter info: D0015=0x%04X → brand=%d, slave_id=%d", raw, brand_code, slave_id)
+            self._log.debug("Pro adapter info: D0015=0x%04X → brand=%d, slave_id=%d", raw, brand_code, slave_id)
             return {
                 "brand_code": brand_code,
                 "slave_id": slave_id
             }
         except Exception as e:
-            _LOGGER.warning("Failed to read adapter info (Pro): %s", e)
+            self._log.warning("Failed to read adapter info (Pro): %s", e)
             return {}
 
     def scan_devices(self, client):
@@ -96,9 +97,10 @@ class AdapterVrfPro(BaseAdapter):
             else:
                 empty_count = 0
                 found.append((0, idx))
+                self._log.debug("Found IDU at 0-%d: %s", idx, regs)
             if empty_count >= 6:
                 break
-        _LOGGER.info("Pro adapter scan found %d valid IDUs", len(found))
+        self._log.info("Pro adapter scan found %d valid IDUs", len(found))
         return found
 
     def read_status(self, client, system, index):
@@ -106,8 +108,9 @@ class AdapterVrfPro(BaseAdapter):
         try:
             regs = client.read_holding_registers(base, 16)
             if not regs or len(regs) != 16:
+                self._log.warning("Pro adapter: No response from IDU %s-%s", system, index)
                 return {"available": False}
-            return {
+            data = {
                 "available": True,
                 "power": bool(regs[3]),
                 "target_temp": regs[4],
@@ -119,8 +122,10 @@ class AdapterVrfPro(BaseAdapter):
                 "runtime_minutes": regs[13],
                 "error_code": self._decode_fault_ascii(regs[14:16]),
             }
+            self._log.debug("IDU %s-%s status: %s", system, index, data)
+            return data
         except Exception as e:
-            _LOGGER.error("Failed reading status for Pro IDU (%s,%s): %s", system, index, e)
+            self._log.error("Failed reading status for Pro IDU (%s,%s): %s", system, index, e)
             return {"available": False}
 
     def _decode_fault_ascii(self, reg_pair):
@@ -150,21 +155,21 @@ class AdapterVrfPro(BaseAdapter):
         return client.write_register(24000 + index * 16 + 7, swing_code)
 
     def restart_device(self, client):
-        _LOGGER.info("Triggering host restart via D62005 = 0x0080")
+        self._log.info("Triggering host restart via D62005 = 0x0080")
         return client.write_registers(62005, [0x0080])
 
     def factory_reset(self, client):
-        _LOGGER.info("Triggering factory reset via D62007 = 0x0001")
+        self._log.info("Triggering factory reset via D62007 = 0x0001")
         return client.write_registers(62005, [0x0040])
 
     def write_brand_code(self, client, brand_id: int):
         brand_word = brand_id & 0x00FF
-        _LOGGER.info("Writing brand code to D62006: 0x%04X", brand_word)
+        self._log.info("Writing brand code to D62006: 0x%04X", brand_word)
         success = client.write_registers(62006, [brand_word])
         if not success:
-            _LOGGER.warning("Failed to write brand code to D62006")
+            self._log.warning("Failed to write brand code to D62006")
             return False
-        _LOGGER.info("Restarting adapter via D62005 = 0x0080")
+        self._log.info("Restarting adapter via D62005 = 0x0080")
         return client.write_registers(62005, [0x0080])
 
     def write_system_time(self, client, dt: datetime = None):
@@ -175,5 +180,5 @@ class AdapterVrfPro(BaseAdapter):
             (dt.day << 8) | dt.hour,
             (dt.minute << 8) | dt.second,
         ]
-        _LOGGER.info("Writing system time to adapter: %s → %s", dt.isoformat(), regs)
+        self._log.info("Writing system time to adapter: %s → %s", dt.isoformat(), regs)
         return client.write_registers(62000, regs)

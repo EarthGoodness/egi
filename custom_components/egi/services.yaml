@@ -16,16 +16,20 @@ set_system_time:
       example: abc123
       selector:
         text:
+      description: "Find the entry_id in Developer Tools → States → any egi.* entity → attributes."
+
 
 set_brand_code:
   name: Set Adapter Brand
   description: Set the HVAC brand code for the adapter and trigger restart.
   fields:
-    entry_id:
-      required: true
-      example: abc123
-      selector:
-        text:
+  entry_id:
+    required: true
+    example: abc123
+    selector:
+      text:
+    description: "Find the entry_id in Developer Tools → States → any egi.* entity → attributes."
+
     brand_code:
       required: true
       example: 6
@@ -33,3 +37,18 @@ set_brand_code:
         number:
           min: 1
           max: 255
+
+set_log_level:
+  name: Set Log Level
+  description: Dynamically set the logging level for EGI integration components.
+  fields:
+    level:
+      required: true
+      example: debug
+      selector:
+        select:
+          options:
+            - info
+            - warning
+            - error
+            - debug

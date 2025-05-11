@@ -64,12 +64,10 @@ class EgiModbusClient:
         self._lock = threading.Lock()
 
     def connect(self):
-        """Never re-connect a shared client."""
         _LOGGER.debug("connect() skipped — using pre-connected shared client.")
         return True
 
     def close(self):
-        """Never close a shared client."""
         _LOGGER.debug("close() skipped — shared client remains open.")
         pass
 
@@ -84,6 +82,7 @@ class EgiModbusClient:
                     count=count,
                     slave=self._slave_id
                 )
+                _LOGGER.debug("Read holding registers at addr=%s count=%s → %s", address, count, result)
             except Exception as e:
                 _LOGGER.error("Modbus read_holding_registers exception: %s", e)
                 return None
@@ -103,6 +102,7 @@ class EgiModbusClient:
                     value=value,
                     slave=self._slave_id
                 )
+                _LOGGER.debug("Wrote register addr=%s value=%s → %s", address, value, result)
             except Exception as e:
                 _LOGGER.error("Modbus write_register exception: %s", e)
                 return False
@@ -122,6 +122,7 @@ class EgiModbusClient:
                     values=values,
                     slave=self._slave_id
                 )
+                _LOGGER.debug("Wrote multiple registers addr=%s values=%s → %s", address, values, result)
             except Exception as e:
                 _LOGGER.error("Modbus write_registers exception: %s", e)
                 return False

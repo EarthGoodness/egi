@@ -1,5 +1,6 @@
 # __init__.py
 import logging
+import time
 from datetime import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -18,6 +19,7 @@ PLATFORMS = ["climate", "button", "sensor", "select"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(const.DOMAIN, {})
 
+    start_time = time.perf_counter()
     adapter_type = entry.data.get("adapter_type", "light")
     adapter = get_adapter(adapter_type)
     _LOGGER.info("Initializing EGI adapter type: %s", adapter_type)
@@ -40,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if client is None:
             raise ConfigEntryNotReady("Modbus TCP connection failed")
 
-    # Connect and scan
     connected = await hass.async_add_executor_job(client.connect)
     if not connected:
         raise ConfigEntryNotReady("Unable to connect to Modbus adapter")
@@ -114,32 +115,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async_handle_rescan_service,
         )
 
+    # Register dynamic log level toggle
+    async def async_handle_set_log_level(call):
+        import logging
+        level = call.data.get("level", "info").lower()
+        log_level = getattr(logging, level.upper(), logging.INFO)
+        targets = [
+            "custom_components.egi",
+            "custom_components.egi.climate",
+            "custom_components.egi.sensor",
+            "custom_components.egi.select",
+            "custom_components.egi.button",
+            "custom_components.egi.modbus_client",
+            "custom_components.egi.adapter.AdapterSolo",
+            "custom_components.egi.adapter.AdapterVrfLight",
+            "custom_components.egi.adapter.AdapterVrfPro",
+        ]
+        for name in targets:
+            logging.getLogger(name).setLevel(log_level)
+        _LOGGER.info("Set log level for EGI modules to %s", level.upper())
+
+    hass.services.async_register(
+        const.DOMAIN, "set_log_level", async_handle_set_log_level
+    )
+
     # Register device in registry
     device_registry = async_get_device_registry(hass)
     gateway_id = f"gateway_{entry.entry_id}"
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(const.DOMAIN, gateway_id)},
-        name=adapter.name,  # e.g. "EGI HVAC Adapter Solo"
+        name=adapter.name,
         manufacturer="EGI",
         model=f"{adapter.display_type} - {adapter.get_brand_name(coordinator.gateway_brand_code)}",
     )
-    
-    # Optionally override user-visible name (not required if adapter.name is already correct)
+
     if coordinator.gateway_brand_code:
         device_registry.async_update_device(
             device.id,
             sw_version="1.0",
             configuration_url=None,
-            name_by_user=adapter.name,  # e.g. "EGI HVAC Adapter Solo"
+            name_by_user=adapter.name,
         )
 
-
-    # Platform loading
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    # ✅ Safe point to update title (once platforms are loaded)
     try:
         brand_code = coordinator.gateway_brand_code
         brand_name = adapter.get_brand_name(brand_code)
@@ -156,6 +177,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     new_title = f"{adapter.name} - {brand_name} (ID {slave_id} / Serial {port})"
     hass.config_entries.async_update_entry(entry, title=new_title)
+
+    duration = time.perf_counter() - start_time
+    _LOGGER.debug("Completed async_setup_entry for %s in %.2f seconds", adapter.name, duration)
+
+    sensor_entity_id = f"sensor.egi_adapter_{adapter_type}_setup_time"
+    hass.states.async_set(sensor_entity_id, round(duration, 2), {
+        "unit_of_measurement": "s",
+        "friendly_name": f"EGI {adapter.display_type} Setup Time"
+    })
 
     return True
 
@@ -191,6 +221,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.services.async_remove(const.DOMAIN, "scan_idus")
             hass.services.async_remove(const.DOMAIN, "set_brand_code")
             hass.services.async_remove(const.DOMAIN, "set_system_time")
+            hass.services.async_remove(const.DOMAIN, "set_log_level")
 
     return unload_ok
 

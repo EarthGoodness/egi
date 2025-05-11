@@ -46,7 +46,9 @@ class VrfBrandSelect(CoordinatorEntity, SelectEntity):
     @property
     def current_option(self):
         code = self.coordinator.gateway_brand_code
-        return self._brand_names.get(code, f"Unknown ({code})")
+        current = self._brand_names.get(code, f"Unknown ({code})")
+        _LOGGER.debug("Current brand code: %s → %s", code, current)
+        return current
 
     async def async_select_option(self, option):
         try:
@@ -57,5 +59,7 @@ class VrfBrandSelect(CoordinatorEntity, SelectEntity):
                     self._adapter.write_brand_code, self._client, brand_code
                 )
                 await self.coordinator.async_request_refresh()
+            else:
+                _LOGGER.warning("Unknown brand selection: %s", option)
         except Exception as e:
             _LOGGER.error("Brand selection failed: %s", e)

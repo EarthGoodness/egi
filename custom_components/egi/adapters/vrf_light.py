@@ -47,6 +47,7 @@ class AdapterVrfLight(BaseAdapter):
 
     def __init__(self):
         super().__init__()
+        self._log = logging.getLogger(f"custom_components.egi.adapter.{self.__class__.__name__}")
         self.name = "EGI VRF Adapter Light"
         self.display_type = "VRF Adapter"
         self.max_idus = 256
@@ -100,7 +101,7 @@ class AdapterVrfLight(BaseAdapter):
                 "special_info": regs[4],
             }
         except Exception as e:
-            _LOGGER.warning("Failed to read adapter info for VRF Light: %s", e)
+            self._log.warning("Failed to read adapter info for VRF Light: %s", e)
             return {}
 
     def scan_devices(self, client):
@@ -144,10 +145,13 @@ class AdapterVrfLight(BaseAdapter):
             key_data["wind_code"] = (fan_wind_code >> 8) & 0xFF
             key_data["error_code"] = error_code
 
+            self._log.debug("Read status for system %s index %s: %s", system, index, key_data)
+
         except Exception as e:
-            _LOGGER.error("Error reading status for system %s index %s: %s", system, index, e)
+            self._log.error("Error reading status for system %s index %s: %s", system, index, e)
 
         return key_data
+
 
     def write_power(self, client, system, index, power_on: bool):
         base_addr = CONTROL_BASE_ADDR + (system * 32 + index) * CONTROL_REG_COUNT
