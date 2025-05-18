@@ -163,3 +163,20 @@ class AdapterSolo(BaseAdapter):
             "medium": 0x02,
             "high": 0x03,
         }.get(ha_fan, 0x00)
+
+    def decode_adapter_info(self, info: dict) -> dict:
+        """
+        Turn raw registers from read_adapter_info() into a friendly dict.
+        Solo only provides brand_code (at D2000) and nothing else.
+        """
+        # Pull the raw brand_code (or default to 0)
+        code = info.get("brand_code", 0)
+        return {
+            "brand_code": code,
+            "brand_name": self.get_brand_name(code),
+            # Solo has no modes/fan/limits, but you could include placeholders
+            "supported_modes": [],
+            "supported_fan": [],
+            "min_temp": None,
+            "max_temp": None,
+        }

@@ -48,7 +48,7 @@ def get_shared_client(connection_type, slave_id=1, **kwargs):
 def _get_client_key(connection_type, **kwargs):
     """Generate unique key for each client based on port or host."""
     if connection_type == "serial":
-        port = kwargs.get("port", "").strip()
+        port = (kwargs.get("port") or "").strip()
         return f"serial::{port}"
     else:
         host = kwargs.get("host", "").strip()

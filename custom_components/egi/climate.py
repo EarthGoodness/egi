@@ -1,6 +1,5 @@
 """Climate platform for EGI VRF integration."""
 import logging
-import asyncio
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -11,21 +10,26 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
-SWING_MODE_MAP = {
-    const.SWING_ON: SWING_ON,
-    const.SWING_OFF: SWING_OFF,
-}
-INV_SWING_MODE_MAP = {v: k for k, v in SWING_MODE_MAP.items()}
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback
+):
     data = hass.data[const.DOMAIN][config_entry.entry_id]
     coord = data["coordinator"]
     adapter = data["adapter"]
-    entities = [EgiVrfClimate(coord, adapter, config_entry, system, index) for (system, index) in coord.devices]
+    entities = [
+        EgiVrfClimate(coord, adapter, config_entry, system, index)
+        for (system, index) in coord.devices
+    ]
     async_add_entities(entities)
 
 class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
@@ -37,7 +41,13 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_fan_modes = ["auto", "low", "medium", "high"]
     _attr_swing_modes = ["off", "on"]
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT]
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT
+    ]
 
     def __init__(self, coordinator, adapter, config_entry, system, index):
         super().__init__(coordinator)
@@ -80,51 +90,39 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def current_temperature(self):
-        temp = self.coordinator.data.get(self._dev_key, {}).get("current_temp")
-        _LOGGER.debug("Current temp for %s: %s", self._dev_key, temp)
-        return temp
+        return self.coordinator.data.get(self._dev_key, {}).get("current_temp")
 
     @property
     def target_temperature(self):
-        temp = self.coordinator.data.get(self._dev_key, {}).get("target_temp")
-        _LOGGER.debug("Target temp for %s: %s", self._dev_key, temp)
-        return temp if temp is not None else None
+        return self.coordinator.data.get(self._dev_key, {}).get("target_temp")
 
     @property
     def fan_mode(self):
         code = self.coordinator.data.get(self._dev_key, {}).get("fan_code", 0)
-        mode = self.adapter.decode_fan(code)
-        _LOGGER.debug("Fan mode for %s (code=%s): %s", self._dev_key, code, mode)
-        return mode
+        return self.adapter.decode_fan(code)
 
     @property
     def swing_mode(self):
         code = self.coordinator.data.get(self._dev_key, {}).get("wind_code", const.SWING_OFF)
-        mode = "on" if code == const.SWING_ON else "off"
-        _LOGGER.debug("Swing mode for %s (code=%s): %s", self._dev_key, code, mode)
-        return mode
+        return "on" if code == const.SWING_ON else "off"
 
     @property
     def hvac_mode(self):
         data = self.coordinator.data.get(self._dev_key, {})
         if not data.get("power", False):
             return HVACMode.OFF
-        mode = self.adapter.decode_mode(data.get("mode_code", 0))
-        _LOGGER.debug("HVAC mode for %s: %s", self._dev_key, mode)
-        return mode
+        return self.adapter.decode_mode(data.get("mode_code", 0))
 
     @property
     def hvac_action(self):
         mode = self.hvac_mode
-        action = {
+        return {
             HVACMode.OFF: HVACAction.OFF,
             HVACMode.COOL: HVACAction.COOLING,
             HVACMode.HEAT: HVACAction.HEATING,
             HVACMode.DRY: HVACAction.DRYING,
             HVACMode.FAN_ONLY: HVACAction.FAN
         }.get(mode, HVACAction.IDLE)
-        _LOGGER.debug("HVAC action for %s: %s", self._dev_key, action)
-        return action
 
     @property
     def min_temp(self):
@@ -137,11 +135,9 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
     @property
     def extra_state_attributes(self):
         data = self.coordinator.data.get(self._dev_key, {})
-        brand_code = self.coordinator.gateway_brand_code
-        brand_name = self.coordinator.gateway_brand_name
         return {
-            "brand_code": brand_code,
-            "brand_name": brand_name,
+            "brand_code": self.coordinator.gateway_brand_code,
+            "brand_name": self.coordinator.gateway_brand_name,
             "error_code": data.get("error_code"),
             "system": self._system,
             "idu_index": self._index
@@ -151,7 +147,6 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        _LOGGER.debug("Set temperature to %s on %s", temp, self._dev_key)
         await self.hass.async_add_executor_job(
             self.adapter.write_temperature,
             self._client,
@@ -163,7 +158,6 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         code = self.adapter.encode_fan(fan_mode)
-        _LOGGER.debug("Set fan mode to %s (code=%s) on %s", fan_mode, code, self._dev_key)
         await self.hass.async_add_executor_job(
             self.adapter.write_fan_speed,
             self._client,
@@ -175,7 +169,6 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str):
         wind_code = const.SWING_MODE_HA_TO_MODBUS.get(swing_mode, const.SWING_OFF)
-        _LOGGER.debug("Set swing mode to %s (code=%s) on %s", swing_mode, wind_code, self._dev_key)
         await self.hass.async_add_executor_job(
             self.adapter.write_swing,
             self._client,
@@ -189,7 +182,6 @@ class EgiVrfClimate(CoordinatorEntity, ClimateEntity):
         power_on = hvac_mode != HVACMode.OFF
         mode_code = self.adapter.encode_mode(hvac_mode)
 
-        _LOGGER.debug("Set HVAC mode to %s (code=%s) with power=%s on %s", hvac_mode, mode_code, power_on, self._dev_key)
         await self.hass.async_add_executor_job(
             self.adapter.write_power,
             self._client,

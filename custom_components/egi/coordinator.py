@@ -5,7 +5,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-class EgiVrfCoordinator(DataUpdateCoordinator):
+class EgiAdapterCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, modbus_client, adapter, indoor_units, update_interval):
         super().__init__(
             hass,
@@ -64,8 +64,13 @@ class EgiVrfCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("Failed to update IDU (%s, %s): %s", system, index, e)
                 data[key] = {"available": False}
 
-        duration = time.perf_counter() - start_time
-        _LOGGER.debug("Completed full data update for %d devices in %.2f seconds", len(self.devices), duration)
+            # total time to read all IDUs + adapter info
+            duration = time.perf_counter() - start_time
+            self.last_update_duration = duration
+            _LOGGER.debug(
+                "Completed full data update for %d devices in %.2f seconds",
+                len(self.devices), duration
+            )
 
         try:
             adapter_type = self._adapter.__class__.__name__.lower().replace("adapter", "")

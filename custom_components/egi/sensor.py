@@ -1,72 +1,167 @@
+"""Sensor platform for EGI Adapter integration."""
 import logging
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from . import const
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    data = hass.data[const.DOMAIN][entry.entry_id]
-    coordinator = data["coordinator"]
-    adapter = data["adapter"]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback
+):
+    """Set up EGI monitoring sensors and adapter config/info sensors."""
+    # In monitor-only mode, sensors are not set up here
+    if entry.data.get("adapter_type") == "none":
+        _LOGGER.debug(
+            "Monitor-only mode: skipping EGI sensors for entry %s", entry.entry_id
+        )
+        return
 
-    sensors = [
-        VrfGatewaySensor(coordinator, entry, adapter),
-    ]
+    # Ensure we have the coordinator and adapter from async_setup_entry
+    entry_data = hass.data.get(const.DOMAIN, {}).get(entry.entry_id)
+    if not entry_data:
+        _LOGGER.error(
+            "No data found for entry %s, skipping EGI sensors", entry.entry_id
+        )
+        return
 
-    async_add_entities(sensors)
+    coordinator = entry_data["coordinator"]
+    adapter = entry_data["adapter"]
+    gateway_id = f"gateway_{entry.entry_id}"
 
+    async_add_entities([
+        SetupTimeSensor(coordinator, entry.entry_id, gateway_id),
+        PollIntervalSensor(coordinator, entry.entry_id, gateway_id),
+        UpdateTimeSensor(coordinator, entry.entry_id, gateway_id),
+        LogLevelSensor(entry.entry_id, gateway_id),
+        AdapterConfigSensor(entry, coordinator, gateway_id),
+        AdapterInfoSensor(entry, coordinator, adapter, gateway_id),
+    ])
 
-class VrfGatewaySensor(CoordinatorEntity, SensorEntity):
-    def __init__(self, coordinator, config_entry, adapter):
-        super().__init__(coordinator)
-        self._config_entry = config_entry
-        self._adapter = adapter
-        self._attr_unique_id = f"{config_entry.entry_id}_gateway_info"
+class BaseEgiSensor(SensorEntity):
+    """Common bits for all EGI sensors."""
+    def __init__(self, entry_id: str, gateway_id: str):
+        self._entry_id = entry_id
+        self._attr_device_info = {"identifiers": {(const.DOMAIN, gateway_id)}}
 
-        brand_code = coordinator.gateway_brand_code
-        self._brand_name = adapter.get_brand_name(brand_code)
-
-        entry_id = config_entry.entry_id
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, f"gateway_{entry_id}")},
-            "name": adapter.name,
-            "manufacturer": "EGI",
-            "model": f"{adapter.display_type} - {self._brand_name}",
-            "sw_version": "1.0",
-        }
-
-        self._attr_name = "Adapter Info"
-        _LOGGER.debug("Created VrfGatewaySensor: %s | Brand: %s", adapter.name, self._brand_name)
+class SetupTimeSensor(BaseEgiSensor):
+    """How long setup took (seconds)."""
+    def __init__(self, coordinator, entry_id, gateway_id):
+        super().__init__(entry_id, gateway_id)
+        self._coordinator = coordinator
+        self._attr_name = "EGI Setup Time"
+        self._attr_unique_id = f"{entry_id}_setup_time"
+        self._attr_unit_of_measurement = "s"
 
     @property
     def state(self):
-        return self._brand_name
+        duration = getattr(self._coordinator, "setup_duration", None)
+        return round(duration, 2) if duration is not None else None
+
+class PollIntervalSensor(BaseEgiSensor):
+    """Configured poll interval (seconds)."""
+    def __init__(self, coordinator, entry_id, gateway_id):
+        super().__init__(entry_id, gateway_id)
+        self._coordinator = coordinator
+        self._attr_name = "EGI Poll Interval"
+        self._attr_unique_id = f"{entry_id}_poll_interval"
+        self._attr_unit_of_measurement = "s"
 
     @property
-    def icon(self):
-        return "mdi:hvac"
+    def state(self):
+        return self._coordinator.update_interval.total_seconds()
+
+class UpdateTimeSensor(BaseEgiSensor):
+    """Measured duration of the last update (seconds)."""
+    def __init__(self, coordinator, entry_id, gateway_id):
+        super().__init__(entry_id, gateway_id)
+        self._coordinator = coordinator
+        self._attr_name = "EGI Last Update Duration"
+        self._attr_unique_id = f"{entry_id}_last_update_duration"
+        self._attr_unit_of_measurement = "s"
+
+    @property
+    def state(self):
+        duration = getattr(self._coordinator, "last_update_duration", None)
+        return round(duration, 2) if duration is not None else None
+
+class LogLevelSensor(BaseEgiSensor):
+    """Current log level of the integration."""
+    def __init__(self, entry_id, gateway_id):
+        super().__init__(entry_id, gateway_id)
+        self._attr_name = "EGI Log Level"
+        self._attr_unique_id = f"{entry_id}_log_level"
+
+    @property
+    def state(self):
+        level_no = logging.getLogger("custom_components.egi").getEffectiveLevel()
+        return logging.getLevelName(level_no)
+
+class AdapterConfigSensor(BaseEgiSensor):
+    """Exposes all static adapter configuration settings."""
+    def __init__(self, entry: ConfigEntry, coordinator, gateway_id):
+        super().__init__(entry.entry_id, gateway_id)
+        self._conf = entry.data
+        self._coordinator = coordinator
+        self._attr_name = "EGI Adapter Config"
+        self._attr_unique_id = f"{entry.entry_id}_adapter_config"
+
+    @property
+    def state(self):
+        return self._conf.get("adapter_type", "unknown")
 
     @property
     def extra_state_attributes(self):
-        adapter_data = self.coordinator.adapter_info or {}
-        brand_code = adapter_data.get("brand_code")
-        decoded_modes = self._decode_bitmask(adapter_data.get("supported_modes", 0), const.SUPPORTED_MODES)
-        decoded_fan = self._decode_bitmask(adapter_data.get("supported_fan", 0), const.SUPPORTED_FAN_SPEEDS)
-        _LOGGER.debug("Sensor attributes: brand_code=%s, modes=%s, fans=%s", brand_code, decoded_modes, decoded_fan)
-        return {
-            "brand_code": brand_code,
-            "brand_name": self._adapter.get_brand_name(brand_code) if brand_code is not None else "Unknown",
-            "supported_modes": decoded_modes,
-            "supported_fan_speeds": decoded_fan,
-            "temperature_limits": const.decode_temperature_limits(
-                adapter_data.get("temp_limits", 0)
-            ),
-            "special_info": const.decode_special_info(
-                adapter_data.get("special_info", 0)
-            ),
+        attrs = {
+            "connection_type": self._conf.get("connection_type"),
+            "slave_id": self._conf.get("slave_id"),
+            "poll_interval_s": self._coordinator.update_interval.total_seconds(),
         }
+        if self._conf.get("connection_type") == "serial":
+            attrs.update({
+                "port": self._conf.get("port"),
+                "baudrate": self._conf.get("baudrate"),
+                "parity": self._conf.get("parity"),
+                "stopbits": self._conf.get("stopbits"),
+                "bytesize": self._conf.get("bytesize"),
+            })
+        else:
+            host = self._conf.get("host", "")
+            port = self._conf.get("port", 502)
+            attrs["host"] = f"{host}:{port}"
+        return attrs
 
-    def _decode_bitmask(self, raw_value, mapping):
-        return [name for bit, name in mapping.items() if raw_value & bit]
+class AdapterInfoSensor(BaseEgiSensor):
+    """Exposes all decoded adapter data retrieved via Modbus."""
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator,
+        adapter,
+        gateway_id: str
+    ):
+        super().__init__(entry.entry_id, gateway_id)
+        self._coordinator = coordinator
+        self._adapter = adapter
+        self._attr_name = "EGI Adapter Info"
+        self._attr_unique_id = f"{entry.entry_id}_adapter_info"
+
+    @property
+    def state(self):
+        # Use the human-readable brand name as the primary state
+        return getattr(self._coordinator, "gateway_brand_name", None)
+
+    @property
+    def extra_state_attributes(self):
+        raw = getattr(self._coordinator, "adapter_info", {}) or {}
+        try:
+            decoded = self._adapter.decode_adapter_info(raw)
+        except Exception as e:
+            _LOGGER.error("Failed to decode adapter info: %s", e)
+            decoded = raw
+        return decoded
