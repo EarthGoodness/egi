@@ -15,14 +15,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback
 ):
     """Set up EGI monitoring sensors and adapter config/info sensors."""
-    # In monitor-only mode, sensors are not set up here
+    # Monitor-only mode: skip sensors
     if entry.data.get("adapter_type") == "none":
         _LOGGER.debug(
             "Monitor-only mode: skipping EGI sensors for entry %s", entry.entry_id
         )
         return
 
-    # Ensure we have the coordinator and adapter from async_setup_entry
     entry_data = hass.data.get(const.DOMAIN, {}).get(entry.entry_id)
     if not entry_data:
         _LOGGER.error(
@@ -38,7 +37,7 @@ async def async_setup_entry(
         SetupTimeSensor(coordinator, entry.entry_id, gateway_id),
         PollIntervalSensor(coordinator, entry.entry_id, gateway_id),
         UpdateTimeSensor(coordinator, entry.entry_id, gateway_id),
-        LogLevelSensor(entry.entry_id, gateway_id),
+        LogLevelSensor(entry.entry_id, adapter, gateway_id),
         AdapterConfigSensor(entry, coordinator, gateway_id),
         AdapterInfoSensor(entry, coordinator, adapter, gateway_id),
     ])
@@ -91,15 +90,17 @@ class UpdateTimeSensor(BaseEgiSensor):
         return round(duration, 2) if duration is not None else None
 
 class LogLevelSensor(BaseEgiSensor):
-    """Current log level of the integration."""
-    def __init__(self, entry_id, gateway_id):
+    """Current log level for this adapter."""
+    def __init__(self, entry_id, adapter, gateway_id):
         super().__init__(entry_id, gateway_id)
-        self._attr_name = "EGI Log Level"
+        self._adapter = adapter
+        self._attr_name = "EGI Adapter Log Level"
         self._attr_unique_id = f"{entry_id}_log_level"
 
     @property
     def state(self):
-        level_no = logging.getLogger("custom_components.egi").getEffectiveLevel()
+        logger_name = f"custom_components.egi.adapter.{self._adapter.__class__.__name__}"
+        level_no = logging.getLogger(logger_name).getEffectiveLevel()
         return logging.getLevelName(level_no)
 
 class AdapterConfigSensor(BaseEgiSensor):
@@ -153,7 +154,6 @@ class AdapterInfoSensor(BaseEgiSensor):
 
     @property
     def state(self):
-        # Use the human-readable brand name as the primary state
         return getattr(self._coordinator, "gateway_brand_name", None)
 
     @property
