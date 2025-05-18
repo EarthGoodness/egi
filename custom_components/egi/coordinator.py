@@ -1,4 +1,6 @@
-"""Coordinator for polling the EGI VRF devices."""
+"""
+Coordinator for polling the EGI adapters.
+"""
 import logging
 import time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -6,7 +8,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 class EgiAdapterCoordinator(DataUpdateCoordinator):
-    def __init__(self, hass, modbus_client, adapter, indoor_units, update_interval):
+    """
+    Coordinates data updates for EGI adapters using Modbus.
+    """
+    def __init__(
+        self,
+        hass,
+        modbus_client,
+        adapter,
+        indoor_units,
+        update_interval
+    ):
         super().__init__(
             hass,
             _LOGGER,
@@ -16,75 +28,78 @@ class EgiAdapterCoordinator(DataUpdateCoordinator):
         self._client = modbus_client
         self._adapter = adapter
         self.devices = indoor_units
-        self.data = {f"{sys}-{idx}": {"available": False} for (sys, idx) in indoor_units}
+        # Initialize data: each key maps to initial availability
+        self.data = {f"{sys}-{idx}": {"available": False} for sys, idx in indoor_units}
 
         self.gateway_brand_code = 0
         self.gateway_brand_name = "Unknown"
         self.adapter_info = {}
+        self.last_update_duration = None
 
     async def _async_update_data(self):
-        data = {}
+        """
+        Fetch updated data from the adapter, including adapter info and unit statuses.
+        """
         start_time = time.perf_counter()
 
+        # Ensure underlying client is connected
         await self.hass.async_add_executor_job(self._client.connect)
 
+        # 1) Read adapter-level info
         try:
-            adapter_info = await self.hass.async_add_executor_job(
-                self._adapter.read_adapter_info, self._client
+            info = await self.hass.async_add_executor_job(
+                self._adapter.read_adapter_info,
+                self._client
             )
-            if isinstance(adapter_info, dict):
-                self.adapter_info = adapter_info
-                new_brand_code = adapter_info.get("brand_code", 0)
-                if new_brand_code != self.gateway_brand_code:
-                    self.gateway_brand_code = new_brand_code
-                    self.gateway_brand_name = self._adapter.get_brand_name(new_brand_code)
+            if isinstance(info, dict):
+                self.adapter_info = info
+                new_code = info.get("brand_code", 0)
+                if new_code != self.gateway_brand_code:
+                    self.gateway_brand_code = new_code
+                    self.gateway_brand_name = self._adapter.get_brand_name(new_code)
                     _LOGGER.info(
-                        "Detected VRF adapter: brand_code=0x%02X name=%s",
+                        "Detected adapter: brand_code=0x%02X name=%s",
                         self.gateway_brand_code, self.gateway_brand_name
                     )
             else:
-                _LOGGER.warning("Adapter returned non-dict info: %s", adapter_info)
-        except Exception as e:
-            _LOGGER.warning("Adapter info read failed: %s", e)
+                _LOGGER.warning("Adapter returned non-dict info: %s", info)
+        except Exception as err:
+            _LOGGER.warning("Failed to read adapter info: %s", err)
             self.gateway_brand_code = 0
             self.gateway_brand_name = "Unknown"
             self.adapter_info = {}
 
-        for (system, index) in self.devices:
+        # 2) Read each unit's status
+        results = {}
+        for system, index in self.devices:
             key = f"{system}-{index}"
-            idu_start = time.perf_counter()
+            unit_start = time.perf_counter()
             try:
                 status = await self.hass.async_add_executor_job(
-                    self._adapter.read_status, self._client, system, index
+                    self._adapter.read_status,
+                    self._client,
+                    system,
+                    index
                 )
-                idu_time = time.perf_counter() - idu_start
-                _LOGGER.debug("Polled IDU %s-%s in %.3f sec → %s", system, index, idu_time, status)
-                data[key] = status
-            except Exception as e:
-                _LOGGER.error("Failed to update IDU (%s, %s): %s", system, index, e)
-                data[key] = {"available": False}
+                _LOGGER.debug(
+                    "Unit %s polled in %.3f sec: %s",
+                    key,
+                    time.perf_counter() - unit_start,
+                    status
+                )
+                results[key] = status
+            except Exception as err:
+                _LOGGER.error("Error polling unit %s: %s", key, err)
+                results[key] = {"available": False}
 
-            # total time to read all IDUs + adapter info
-            duration = time.perf_counter() - start_time
-            self.last_update_duration = duration
-            _LOGGER.debug(
-                "Completed full data update for %d devices in %.2f seconds",
-                len(self.devices), duration
-            )
+        self.data = results
 
-        try:
-            adapter_type = self._adapter.__class__.__name__.lower().replace("adapter", "")
-            self.hass.states.async_set(
-                f"sensor.egi_adapter_{adapter_type}_poll_duration",
-                round(duration, 2),
-                {
-                    "unit_of_measurement": "s",
-                    "device_class": "duration",
-                    "state_class": "measurement",
-                    "friendly_name": f"EGI {self._adapter.display_type} Poll Time"
-                }
-            )
-        except Exception as e:
-            _LOGGER.debug("Unable to create polling duration sensor: %s", e)
+        # 3) Record duration
+        duration = time.perf_counter() - start_time
+        self.last_update_duration = duration
+        _LOGGER.debug(
+            "Update cycle completed for %d units in %.2f sec",
+            len(self.devices), duration
+        )
 
-        return data
+        return results
